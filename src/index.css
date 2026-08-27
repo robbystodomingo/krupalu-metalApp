@@ -11,3 +11,37 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.sidenav {
+  position: fixed;
+  top: 64px;                  /* offset below fixed navbar */
+  left: 0;
+  height: calc(100vh - 64px); /* fill remaining height */
+  width: 220px;
+  background-color: #ffffff;
+  padding: 1rem;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  overflow-y: auto;
+}
+
+.banner {
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  position: relative;
+}
+
+.banner img {
+  width: 110%; /* slightly larger for zoom */
+  animation: zoomPan 5s ease-in-out forwards;
+}
+
+@keyframes zoomPan {
+  from {
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    transform: scale(1.1) translate(-20px, -10px);
+  }
+}
+
