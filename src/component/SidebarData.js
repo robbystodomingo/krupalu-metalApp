@@ -2,41 +2,7 @@ import * as MuiIcon from "@mui/icons-material";
 import React from 'react'
 
 
-export const SidebarData = [
-    // {
-    //     title: "Vendors",
-    //     path: "/",
-    //     icon: <MuiIcon.Groups2Rounded/>
-    // },
-    // {
-    //     title: "Items",
-    //     path: "/items",
-    //     icon: <MuiIcon.StorefrontRounded/>
-    // },
-    // {
-    //     title: "Purchase Order",
-    //     path: "/puchaseOrder",
-    //     icon: <MuiIcon.ShoppingCartRounded/>
-    // },
-    // {
-    //     title: "Sales",
-    //     path: "/items",
-    //     icon: <MuiIcon.PointOfSaleRounded/>
-    // },
-    // {
-    //     title: "Bin Locations",
-    //     path: "/binLocation",
-    //     icon: <MuiIcon.LocationOnRounded/>
-    // },
-    // {
-    //     title: "Contacts",
-    //     path: "/contacts",
-    //     icon: <MuiIcon.ContactPage/>
-    // }
-
-   // SidebarData.js
-
- 
+export const SidebarData = [ 
   {
     title: "Users",
     path: "/admin/users",
@@ -44,20 +10,50 @@ export const SidebarData = [
     roles: ["ADMIN"], // only admin
   },
   {
-    title: "Products",
-    path: "/seller/products",
-    icon: "📦",
+    title: "Dashboard",
+    path: "/seller",
+    icon: "🏠",
     roles: ["SELLER"], // only seller
   },
   {
-    title: "Cart",
-    path: "/buyer/cart",
+    title: "Sellers",
+    path: "/buyer/sellersList",
+    icon: "🏪",
+    roles: ["BUYER"], // only buyer
+  },
+  {
+    title: "Advertisers",
+    path: "/buyer/advertisersList",
     icon: "🛒",
     roles: ["BUYER"], // only buyer
   },
   {
+    title: "Sellers",
+    path: "/advertiser/sellersList",
+    icon: "🏪",
+    roles: ["ADVERTISER"], // only advertiser
+  },
+  {
+    title: "Buyers",
+    path: "/advertiser/buyersList",
+    icon: "🛒",
+    roles: ["ADVERTISER"], // only advertiser
+  },
+  {
+    title: "Buyers",
+    path: "/seller/buyersList",
+    icon: "🛒",
+    roles: ["SELLER"], // only seller
+  },
+  {
+    title: "Advertisers",
+    path: "/seller/advertisersList",
+    icon: "📢",
+    roles: ["SELLER"], // only seller
+  },
+  {
     title: "Campaigns",
-    path: "/advertiser/campaigns",
+    path: "/advertiser",
     icon: "📢",
     roles: ["ADVERTISER"], // only advertiser
   },

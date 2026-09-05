@@ -1,24 +1,19 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import 'bootstrap/dist/css/bootstrap.min.css';
-
-import Sheet from '@mui/joy/Sheet';
-import CssBaseline from '@mui/joy/CssBaseline';
-import Typography from '@mui/joy/Typography';
-import FormControl from '@mui/joy/FormControl';
-import FormLabel from '@mui/joy/FormLabel';
-import Input from '@mui/joy/Input';
-import Button from '@mui/joy/Button';
-import Link from '@mui/joy/Link';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Link,
+  Paper
+} from "@mui/material";
 
 function LoginPage({ setRole }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  
-
-  
 
   async function login(event) {
     event.preventDefault();
@@ -29,28 +24,17 @@ function LoginPage({ setRole }) {
       }, {
         headers: { "Content-Type": "application/json" }
       });
- 
-      console.log(response.data);
 
-     
-
-      const { role } = response.data;
-      console.log("APP ROLE: ", role)
-
+      const { token, role } = response.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role.toUpperCase());
       setRole(role.toUpperCase());
 
-      if (role === "ADMIN") {
-        navigate("/admin");
-      } else if (role === "SELLER") {
-        navigate("/seller");
-      } else if (role === "BUYER") {
-        navigate("/buyer");
-      } else if (role === "ADVERTISER") {
-        navigate("/advertiser");
-      } else {
-        navigate("/home"); 
-      }
-
+      if (role === "ADMIN") navigate("/admin");
+      else if (role === "SELLER") navigate("/seller");
+      else if (role === "BUYER") navigate("/buyer");
+      else if (role === "ADVERTISER") navigate("/advertiser");
+      else navigate("/home");
     } catch (err) {
       console.error(err);
       alert("Login failed");
@@ -58,69 +42,75 @@ function LoginPage({ setRole }) {
   }
 
   return (
-    <main  style={{
-      display: "flex",
-      minHeight: "100dvh",
-      backgroundImage: "url('/LoginPage.png')", 
-      backgroundSize: "cover",                  
-      backgroundPosition: "center",             
-      backgroundRepeat: "no-repeat",
-    }}>
-      <CssBaseline />
-      <Sheet
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        backgroundImage: "url('/LoginPage.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        alignItems: "center",
+        justifyContent: "flex-start",
+      pl: 10,
+      }}
+    >
+      <Paper
+        elevation={6}
         sx={{
-           width: 750,
-            ml: 20,
-            my: "auto",                
-            py: 3,
-            px: 2,
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            borderRadius: "sm",
-            boxShadow: "md",
-            backgroundColor: "rgba(255,255,255,0.85)", 
+          width: 600,
+          ml: 20,
+          my: "auto",
+          py: 3,
+          px: 2,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          borderRadius: "sm",
+          boxShadow: "md",
+          backgroundColor: "rgba(255,255,255,0.85)",
         }}
-        variant="outlined"
       >
-        <div>
-          <Typography level="h4" component="h1">
-            <b>Welcome to Krupalu Metal Inc!</b>
-          </Typography>
-          <Typography level="body-sm">Sign in to continue.</Typography>
-        </div>
-        <FormControl>
-          <FormLabel>Email</FormLabel>
-          <Input
-            name="email"
-            type="email"
-            id="email"
-            placeholder="Enter Email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </FormControl>
-        <FormControl>
-          <FormLabel>Password</FormLabel>
-          <Input
-            name="password"
-            type="password"
-            id="password"
-            placeholder="Enter Password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </FormControl>
-        <Button onClick={login} sx={{ mt: 1 }}>Log in</Button>
-        <Typography
-          endDecorator={<Link href="/register">Register</Link>}
-          fontSize="sm"
-          sx={{ alignSelf: 'center' }}
-        >
-          Don&apos;t have an account?
+        <Typography variant="h5" component="h1" align="center" gutterBottom>
+          <b>Welcome to Krupalu Metal Inc!</b>
         </Typography>
-      </Sheet>
-    </main>
+        <Typography variant="body2" align="center">
+          Sign in to continue.
+        </Typography>
+
+        <TextField
+          label="Email"
+          type="email"
+          fullWidth
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
+        <TextField
+          label="Password"
+          type="password"
+          fullWidth
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+        />
+
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={login}
+          fullWidth
+          sx={{ mt: 1 }}
+        >
+          Log in
+        </Button>
+
+        <Typography variant="body2" align="center">
+          Don&apos;t have an account?{" "}
+          <Link href="/register" underline="hover">
+            Register
+          </Link>
+        </Typography>
+      </Paper>
+    </Box>
   );
 }
 
