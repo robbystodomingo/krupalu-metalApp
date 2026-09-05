@@ -4,13 +4,17 @@ package com.krupalu.MetalApp.config;
 import com.krupalu.MetalApp.services.JWTService;
 import com.krupalu.MetalApp.services.UserService;
 import com.krupalu.MetalApp.token.TokenRepository;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,9 +23,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
@@ -54,17 +60,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .orElse(false);
             if(jwtService.isTokenValid(jwt, userDetails) && isTokenValid){
                 SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                Claims claims = jwtService.extractAllClaims(jwt);
+                String role = claims.get("role", String.class);
+                String userId = claims.get("userId", String.class);
+
+                System.out.println("Role from JWT: " + role);
+
+                List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
 
                 UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
-                        userDetails.getAuthorities()
+                        authorities
                 );
-
                 token.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 securityContext.setAuthentication(token);
                 SecurityContextHolder.setContext(securityContext);
+
+                log.info("Authentication set with authorities: {}", token.getAuthorities());
+
             }
         }
         response.setHeader("Access-Control-Allow-Origin", "*");

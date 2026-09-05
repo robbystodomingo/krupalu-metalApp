@@ -16,7 +16,7 @@ public class Token {
 
     @Id
     @GeneratedValue
-    private Integer id;
+    private String id;
 
     private String token;
 

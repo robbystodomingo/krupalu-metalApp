@@ -40,10 +40,16 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain (HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request.requestMatchers("/api/v1/auth/**",
-                                "/api/v1/**", "/error")
+                                "/error")
                         .permitAll()
+                        .requestMatchers("/api/v1/user/me").authenticated()       // must be logged in
+                        .requestMatchers("/api/v1/subscription/**").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/v1/sellerDashboard/**").hasAnyAuthority("SELLER")
+                        .requestMatchers("/api/v1/advertiserDashboard/**").hasAnyAuthority("ADVERTISER")
+                        .requestMatchers("/api/v1/buyerDashboard/**").hasAnyAuthority("BUYER")
                         .requestMatchers("/api/v1/admin").hasAnyAuthority(Role.ADMIN.name())
-                        //requestMatchers("/api/v1/user").hasAnyAuthority(Role.USER.name())
+                        .requestMatchers("/uploads/**").permitAll()
                         .anyRequest().authenticated())
 
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -57,6 +63,7 @@ public class SecurityConfiguration {
                 );
         return http.build();
     }
+
 
     @Bean
     public AuthenticationProvider authenticationProvider(){
