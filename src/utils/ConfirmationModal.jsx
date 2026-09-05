@@ -17,21 +17,33 @@ export function showConfirmation({ title, message, confirmText = "Confirm", canc
     };
 
     const Modal = (
-      <Dialog open onClose={() => handleClose(false)}>
+      <Dialog
+        open
+        onClose={() => handleClose(false)}
+        fullWidth          // 👈 makes dialog stretch to maxWidth
+        maxWidth="sm"      // 👈 options: 'xs', 'sm', 'md', 'lg', 'xl'
+      >
         <DialogTitle>{title}</DialogTitle>
-        <DialogContent>
+        <DialogContent
+          sx={{
+            minWidth: 150,   // 👈 force a minimum width
+            minHeight: 80,  // 👈 optional: add some height
+          }}
+        >
           <Typography>{message}</Typography>
         </DialogContent>
         <DialogActions>
-          {/* <Button onClick={() => handleClose(false)} color="white">
-            {cancelText}
-          </Button> */}
-          <Button onClick={() => handleClose(true)} variant="contained" color="primary">
+          <Button
+            onClick={() => handleClose(true)}
+            variant="contained"
+            color="primary"
+          >
             {confirmText}
           </Button>
         </DialogActions>
       </Dialog>
     );
+
 
     root.render(Modal);
   });

@@ -73,7 +73,7 @@ const PaymentForm = ({ email, onPaymentSaved }) => {
 
       if (setupIntent.status === "succeeded") {
         alert("Payment method saved successfully!");
-        onPaymentSaved(customerId); // ✅ pass customerId up
+        onPaymentSaved(customerId);
       }
     } catch (err) {
       console.error(err);

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Box, Typography, Button } from "@mui/material";
+import { Modal, Box, Typography, Button, Divider, IconButton } from "@mui/material";
+import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import Slider from "react-slick";
 import axios from "axios";
 
-const PostDetailModal = ({ open, handleClose, productId, onPostDeleted }) => {
+const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, onEdit }) => {
   const [post, setPost] = useState(null);
 
   useEffect(() => {
@@ -20,6 +21,31 @@ const PostDetailModal = ({ open, handleClose, productId, onPostDeleted }) => {
 
   if (!post) return null;
 
+  // Custom arrow components
+  const NextArrow = (props) => {
+    const { onClick } = props;
+    return (
+      <IconButton
+        onClick={onClick}
+        sx={{ position: "absolute", right: -25, top: "40%", zIndex: 1 }}
+      >
+        <ArrowForwardIos />
+      </IconButton>
+    );
+  };
+
+  const PrevArrow = (props) => {
+    const { onClick } = props;
+    return (
+      <IconButton
+        onClick={onClick}
+        sx={{ position: "absolute", left: -25, top: "40%", zIndex: 1 }}
+      >
+        <ArrowBackIos />
+      </IconButton>
+    );
+  };
+
   const settings = {
     dots: true,
     infinite: true,
@@ -27,6 +53,8 @@ const PostDetailModal = ({ open, handleClose, productId, onPostDeleted }) => {
     slidesToShow: 1,
     slidesToScroll: 1,
     arrows: true,
+    nextArrow: <NextArrow />,
+    prevArrow: <PrevArrow />,
   };
 
   const handleDelete = () => {
@@ -37,8 +65,8 @@ const PostDetailModal = ({ open, handleClose, productId, onPostDeleted }) => {
       })
       .then(() => {
         alert("Post deleted successfully");
-        onPostDeleted(productId); // ✅ update parent state
-        handleClose();            // ✅ close modal
+        onPostDeleted(productId);
+        handleClose();
       })
       .catch((err) => console.error("Error deleting post:", err));
   };
@@ -89,15 +117,23 @@ const PostDetailModal = ({ open, handleClose, productId, onPostDeleted }) => {
           {post.description}
         </Typography>
 
-        {/* Delete button */}
-        <Button
-          variant="contained"
-          color="error"
-          onClick={handleDelete}
-          sx={{ mt: 3 }}
-        >
-          Delete Post
-        </Button>
+        <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
+
+        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 2 }}>
+          <Button variant="contained" color="error" onClick={handleDelete}>
+            Delete Post
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              onEdit(post);
+              handleClose();
+            }}
+          >
+            Edit Post
+          </Button>
+        </Box>
       </Box>
     </Modal>
   );

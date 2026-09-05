@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import Navbar from "../component/Navbar";
 import { Box } from "@mui/material";
 
-const drawerWidth = 110; // 👈 adjust this value to control how narrow the sidebar + header offset is
+const drawerWidth = 220; // 👈 adjust this value to control how narrow the sidebar + header offset is
 
 export default function Layout({ role, setRole, children }) {
   const location = useLocation();
@@ -28,10 +28,16 @@ export default function Layout({ role, setRole, children }) {
       )}
 
       {/* Main content shifts right only by drawerWidth when drawer is open */}
+
       <Box
         component="main"
         sx={{
-          flexGrow: 1,
+          flexGrow: shouldHideNavbar ? 1 : 1,                  // 👈 flexible on exempt pages
+          width: shouldHideNavbar ? "100%" : "auto",           // 👈 full width on exempt pages, flexible otherwise
+          minWidth: shouldHideNavbar ? "100%" : 1650,           // 👈 minimum width for dashboard pages
+          maxWidth: shouldHideNavbar ? "100%" : 1920,          // 👈 maximum width for dashboard pages
+          minHeight: "calc(100vh - 64px)",                     // 👈 consistent min height
+          maxHeight: "calc(100vh - 64px)",                     // 👈 consistent max height
           marginTop: !shouldHideNavbar ? "64px" : "0",
           marginLeft: !shouldHideNavbar && role && open ? `${drawerWidth}px` : 0,
           transition: "margin-left 0.3s ease",
@@ -39,10 +45,14 @@ export default function Layout({ role, setRole, children }) {
           borderRight: "none",
           backgroundImage: "none",
           p: { xs: 0, md: 0 },
+          // overflowX: "hidden",
         }}
       >
         {children}
       </Box>
+
+
+
 
     </Box>
   );
