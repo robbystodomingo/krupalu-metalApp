@@ -21,11 +21,14 @@ public class JWTServiceImpl implements JWTService{
 
 
     public String generateToken(User user){
-        return Jwts.builder().setSubject(user.getUsername())
-                .setIssuedAt((new Date(System.currentTimeMillis())))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
+        return Jwts.builder()
+                .setSubject(user.getEmail())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24h
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .claim("fullName", user.getFullName())
+                .claim("role",user.getRole().name())
+                .claim("userId", user.getId())
                 .compact();
     }
 
@@ -47,7 +50,7 @@ public class JWTServiceImpl implements JWTService{
         return Keys.hmacShaKeyFor(key);
     }
 
-    private Claims extractAllClaims(String token){
+    public Claims extractAllClaims(String token){
         return Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token).getBody();
     }
 
@@ -94,6 +97,5 @@ public class JWTServiceImpl implements JWTService{
                 .getBody()
                 .get("roles");
     }
-
 
 }

@@ -1,6 +1,7 @@
 package com.krupalu.MetalApp.services;
 
 import com.krupalu.MetalApp.entity.User;
+import io.jsonwebtoken.Claims;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
@@ -21,4 +22,6 @@ public interface JWTService {
     String getFirstNameFromToken(String token);
 
     List<String> getRolesFromToken(String token);
+
+    Claims extractAllClaims(String token);
 }

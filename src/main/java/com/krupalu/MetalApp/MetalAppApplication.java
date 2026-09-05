@@ -9,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.util.List;
 
 
 @SpringBootApplication
@@ -22,9 +23,9 @@ public class MetalAppApplication implements CommandLineRunner {
 	}
 
 	public void run(String... args){
-		User superUserAccount = userRepository.findByRole(Role.ADMIN);
-		if(null == superUserAccount){
+		List<User> admins = userRepository.findByRole(Role.ADMIN);
 
+		if (admins.isEmpty()) {
 			var user = User.builder()
 					.email("admin@gmail.com")
 					.fullName("admin")
