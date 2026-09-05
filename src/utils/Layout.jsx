@@ -1,30 +1,49 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
+import Navbar from "../component/Navbar";
+import { Box } from "@mui/material";
 
-import Sidenav from "../component/Sidenav"; 
+const drawerWidth = 110; // 👈 adjust this value to control how narrow the sidebar + header offset is
 
-export default function Layout({ role, children }) {
-    
-const location = useLocation();
-const hiddenPaths = ["/", "/login", "/register"];
-const shouldHideSidenav = hiddenPaths.includes(location.pathname);
+export default function Layout({ role, setRole, children }) {
+  const location = useLocation();
+  const hiddenPaths = ["/", "/login", "/register"];
+  const shouldHideNavbar = hiddenPaths.includes(location.pathname);
+
+  // Sidebar state lives here
+  const [open, setOpen] = useState(true);
+
+  const toggleDrawer = () => setOpen(!open);
+
   return (
-    <div style={{ minHeight: "100vh" }}>
-      {/* ✅ Only show navbar if not on hidden paths */}
-      {!shouldHideSidenav}
-      <div style={{ display: "flex" }}>
-        {/* ✅ Only show sidenav if role exists and not on hidden paths */}
-        {!shouldHideSidenav && role && <Sidenav role={role} />}
-        <main
-          style={{
-            flex: 1,
-            marginLeft: !shouldHideSidenav && role ? "220px" : "0",
-            marginTop: !shouldHideSidenav ? "64px" : "0", // ✅ only offset when navbar is visible
-          }}
-        >
-          {children}
-        </main>
-      </div>
-    </div>
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+      {/* Navbar always on top unless hidden */}
+      {!shouldHideNavbar && role && (
+        <Navbar
+          role={role}
+          open={open}
+          toggleDrawer={toggleDrawer}
+          setRole={setRole}
+        />
+      )}
+
+      {/* Main content shifts right only by drawerWidth when drawer is open */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          marginTop: !shouldHideNavbar ? "64px" : "0",
+          marginLeft: !shouldHideNavbar && role && open ? `${drawerWidth}px` : 0,
+          transition: "margin-left 0.3s ease",
+          boxShadow: "none",
+          borderRight: "none",
+          backgroundImage: "none",
+          p: { xs: 0, md: 0 },
+        }}
+      >
+        {children}
+      </Box>
+
+    </Box>
   );
 }
