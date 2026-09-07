@@ -32,12 +32,12 @@ export default function Layout({ role, setRole, children }) {
       <Box
         component="main"
         sx={{
-          flexGrow: shouldHideNavbar ? 1 : 1,                  // 👈 flexible on exempt pages
-          width: shouldHideNavbar ? "100%" : "auto",           // 👈 full width on exempt pages, flexible otherwise
-          minWidth: shouldHideNavbar ? "100%" : 1650,           // 👈 minimum width for dashboard pages
-          maxWidth: shouldHideNavbar ? "100%" : 1920,          // 👈 maximum width for dashboard pages
-          minHeight: "calc(100vh - 64px)",                     // 👈 consistent min height
-          maxHeight: "calc(100vh - 64px)",                     // 👈 consistent max height
+          flexGrow: shouldHideNavbar ? 1 : 1,
+          width: shouldHideNavbar ? "100%" : "auto",
+          minWidth: shouldHideNavbar ? "100%" : 1650,
+          maxWidth: shouldHideNavbar ? "100%" : 1920,
+          minHeight: "calc(100vh - 64px)",
+          maxHeight: "calc(100vh - 64px)",
           marginTop: !shouldHideNavbar ? "64px" : "0",
           marginLeft: !shouldHideNavbar && role && open ? `${drawerWidth}px` : 0,
           transition: "margin-left 0.3s ease",

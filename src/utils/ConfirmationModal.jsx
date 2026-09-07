@@ -20,14 +20,20 @@ export function showConfirmation({ title, message, confirmText = "Confirm", canc
       <Dialog
         open
         onClose={() => handleClose(false)}
-        fullWidth          // 👈 makes dialog stretch to maxWidth
-        maxWidth="sm"      // 👈 options: 'xs', 'sm', 'md', 'lg', 'xl'
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            borderRadius: 2, 
+            boxShadow: 6,  
+          },
+        }}
       >
         <DialogTitle>{title}</DialogTitle>
         <DialogContent
           sx={{
-            minWidth: 150,   // 👈 force a minimum width
-            minHeight: 80,  // 👈 optional: add some height
+            minWidth: 100,
+            minHeight: 80,
           }}
         >
           <Typography>{message}</Typography>

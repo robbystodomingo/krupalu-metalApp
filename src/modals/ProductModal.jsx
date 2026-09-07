@@ -10,7 +10,6 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { showConfirmation } from '../utils/ConfirmationModal';
 
 const style = {
     position: "absolute",
@@ -106,15 +105,6 @@ export default function ProductModal({ open = false, handleClose, product, mode 
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                // alert("Product posted successfully!");
-                const confirmed = showConfirmation({
-                    title: 'Post created',
-                    message: 'Successfully created post.',
-                    confirmText: 'Got it!',
-                });
-                if (confirmed) {
-                    navigate('/seller');
-                }
             } else {
                 await axios.put(`/api/v1/sellerDashboard/posts/edit/${product.id}`, data, {
                     headers: {
@@ -122,18 +112,9 @@ export default function ProductModal({ open = false, handleClose, product, mode 
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                const confirmed = showConfirmation({
-                    title: 'Edit post',
-                    message: 'Successfully edited post.',
-                    confirmText: 'Got it!',
-                });
-                if (confirmed) {
-                    navigate('/seller');
-                }
             }
 
             handleClose();
-
 
             if (onSuccess) {
                 onSuccess();
@@ -145,7 +126,6 @@ export default function ProductModal({ open = false, handleClose, product, mode 
             alert(`Failed to ${mode === "create" ? "post" : "update"} product.`);
         }
     };
-
 
     return (
         <Modal open={open} onClose={handleClose}>
@@ -208,7 +188,7 @@ export default function ProductModal({ open = false, handleClose, product, mode 
                 </Button>
 
                 {previewUrls.length > 0 && (
-                    <Box mt={2} sx={{ display: "flex", flexWrap: "wrap", gap: 2 , mt: 3}}>
+                    <Box mt={2} sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 3 }}>
                         {previewUrls.map((url, idx) => (
                             <Box
                                 key={idx}

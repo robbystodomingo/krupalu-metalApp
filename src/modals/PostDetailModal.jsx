@@ -64,7 +64,6 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {
-        alert("Post deleted successfully");
         onPostDeleted(productId);
         handleClose();
       })
