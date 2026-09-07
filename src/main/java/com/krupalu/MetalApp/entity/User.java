@@ -37,6 +37,7 @@ public class User implements UserDetails {
 
     private String password;
 
+    @Column(length = 1000)
     private String requirement;
 
     private String category;

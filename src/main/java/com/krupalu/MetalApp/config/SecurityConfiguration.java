@@ -44,6 +44,7 @@ public class SecurityConfiguration {
                         .permitAll()
                         .requestMatchers("/api/v1/user/me").authenticated()       // must be logged in
                         .requestMatchers("/api/v1/subscription/**").permitAll()
+                        .requestMatchers("/api/v1/email/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/v1/sellerDashboard/**").hasAnyAuthority("SELLER")
                         .requestMatchers("/api/v1/advertiserDashboard/**").hasAnyAuthority("ADVERTISER")
