@@ -73,7 +73,7 @@ export default function BuyersList() {
   );
 
   return (
-    <Paper sx={{ p: 3, mt: 4 }}>
+    <Box sx={{ p: 3, mt: 4 }}>
       <Box textAlign="center" mb={4}>
         <Typography variant="h4" gutterBottom>
           Buyers List
@@ -84,7 +84,7 @@ export default function BuyersList() {
       </Box>
 
       {/* Center the grid */}
-      <Box display="flex" justifyContent="center">
+      <Box display="flex" justifyContent="flex-start">
         <Grid container spacing={3} justifyContent="center" maxWidth="900px">
           {paginatedBuyers.map((buyer, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>
@@ -105,6 +105,6 @@ export default function BuyersList() {
           rowsPerPageOptions={[5, 10, 15]}
         />
       </Box>
-    </Paper>
+    </Box>
   );
 }

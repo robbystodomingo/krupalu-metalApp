@@ -22,7 +22,7 @@ const style = {
   p: 4,
 };
 
-export default function ProductPostModal({ open, handleClose }) {
+export default function ProductEditModal({ open = false, handleClose, product }) {
   const [formData, setFormData] = useState({
     name: "",
     categoryId: "",
@@ -31,7 +31,20 @@ export default function ProductPostModal({ open, handleClose }) {
   });
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [previewUrls, setPreviewUrls] = useState([]); // 👈 new state
+  const [previewUrls, setPreviewUrls] = useState([]);
+
+  // Sync formData whenever product changes
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.productName || "",
+        categoryId: product.categoryId || "",
+        description: product.description || "",
+        photos: [],
+      });
+      setPreviewUrls(product.photoUrls || []);
+    }
+  }, [product]);
 
   // Fetch categories when modal opens
   useEffect(() => {
@@ -59,38 +72,36 @@ export default function ProductPostModal({ open, handleClose }) {
     const { name, value, files } = e.target;
     if (name === "photos") {
       const fileArray = Array.from(files);
-      setFormData({ ...formData, photos: fileArray });
-
-      // Generate preview URLs
+      setFormData((prev) => ({ ...prev, photos: fileArray }));
       const urls = fileArray.map((file) => URL.createObjectURL(file));
       setPreviewUrls(urls);
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleSubmit = async () => {
     try {
       const data = new FormData();
-      data.append("productName", formData.name);
-      data.append("categoryId", formData.categoryId);
-      data.append("description", formData.description);
+      if (formData.name) data.append("productName", formData.name);
+      if (formData.categoryId) data.append("categoryId", formData.categoryId);
+      if (formData.description) data.append("description", formData.description);
       if (formData.photos.length > 0) {
         formData.photos.forEach((file) => data.append("photos", file));
       }
 
-      await axios.post("/api/v1/sellerDashboard/posts/createPosting", data, {
+      await axios.put(`/api/v1/sellerDashboard/posts/edit/${product.id}`, data, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
-      alert("Product posted successfully!");
+      alert("Product updated successfully!");
       handleClose();
     } catch (error) {
       console.error(error);
-      alert("Failed to post product.");
+      alert("Failed to update product.");
     }
   };
 
@@ -98,8 +109,9 @@ export default function ProductPostModal({ open, handleClose }) {
     <Modal open={open} onClose={handleClose}>
       <Box sx={style}>
         <Typography variant="h6" mb={2}>
-          Add Product
+          Edit Product
         </Typography>
+
         <TextField
           fullWidth
           label="Name"
@@ -143,7 +155,7 @@ export default function ProductPostModal({ open, handleClose }) {
         />
 
         <Button variant="contained" component="label" sx={{ mt: 2 }}>
-          Upload Photos
+          Upload New Photos
           <input
             type="file"
             name="photos"
@@ -153,9 +165,8 @@ export default function ProductPostModal({ open, handleClose }) {
           />
         </Button>
 
-
         {previewUrls.length > 0 && (
-          <Box mt={2} display="flex" flexWrap="wrap" gap={2}>
+          <Box mt={2} sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
             {previewUrls.map((url, idx) => (
               <Box
                 key={idx}
@@ -170,20 +181,9 @@ export default function ProductPostModal({ open, handleClose }) {
 
         <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
 
-        <Box
-          sx={{
-            mt: 2,
-            display: "flex",
-            justifyContent: "flex-end",
-            width: "100%",   // 👈 ensures full width
-            
-          }}
-          gap={10}
-        >
-          <Button variant="contained" color="success" onClick={handleSubmit} sx={{ mr: 1
-            
-           }}>
-            OK
+        <Box display="flex" justifyContent="flex-end" sx={{ mt: 2, width: "100%" }} gap={2}>
+          <Button variant="contained" color="success" onClick={handleSubmit}>
+            Save Changes
           </Button>
           <Button variant="outlined" color="error" onClick={handleClose}>
             Cancel

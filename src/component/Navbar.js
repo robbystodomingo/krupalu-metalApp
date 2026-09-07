@@ -83,10 +83,20 @@ const Navbar = ({ role, open, toggleDrawer }) => {
         variant="persistent"
         anchor="left"
         open={open}
+        //   sx={{
+        //     width: open ? drawerWidth : 220, // 👈 collapsed width
+        //     '& .MuiDrawer-paper': {
+        //       width: open ? drawerWidth : 220,
+        //     },
+        //   }}
+        // >
         sx={{
-          width: open ? drawerWidth : 220, // 👈 collapsed width
+          width: drawerWidth,
+          flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: open ? drawerWidth : 220,
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            p: 1, // 👈 inside spacing
           },
         }}
       >
