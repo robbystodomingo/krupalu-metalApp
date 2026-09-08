@@ -143,7 +143,9 @@ export default function AdvertisersList() {
         <Typography variant="h4" gutterBottom>
           Advertisers List
         </Typography>
+
         <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
+        
         <Typography
           variant="body1"
           color="text.secondary"

@@ -10,12 +10,6 @@ export const SidebarData = [
     roles: ["ADMIN"], // only admin
   },
   {
-    title: "Dashboard",
-    path: "/seller",
-    icon: "🏠",
-    roles: ["SELLER"], // only seller
-  },
-  {
     title: "Sellers",
     path: "/buyer/sellersList",
     icon: "🏪",
@@ -26,6 +20,12 @@ export const SidebarData = [
     path: "/buyer/advertisersList",
     icon: "🛒",
     roles: ["BUYER"], // only buyer
+  },
+  {
+    title: "Campaigns",
+    path: "/advertiser",
+    icon: "📢",
+    roles: ["ADVERTISER"], // only advertiser
   },
   {
     title: "Sellers",
@@ -40,6 +40,12 @@ export const SidebarData = [
     roles: ["ADVERTISER"], // only advertiser
   },
   {
+    title: "Dashboard",
+    path: "/seller",
+    icon: "🏠",
+    roles: ["SELLER"], // only seller
+  },
+  {
     title: "Buyers",
     path: "/seller/buyersList",
     icon: "🛒",
@@ -50,12 +56,6 @@ export const SidebarData = [
     path: "/seller/advertisersList",
     icon: "📢",
     roles: ["SELLER"], // only seller
-  },
-  {
-    title: "Campaigns",
-    path: "/advertiser",
-    icon: "📢",
-    roles: ["ADVERTISER"], // only advertiser
   },
 ];
 
