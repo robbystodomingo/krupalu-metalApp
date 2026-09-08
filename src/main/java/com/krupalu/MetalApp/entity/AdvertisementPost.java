@@ -6,35 +6,33 @@ import lombok.*;
 
 import java.util.List;
 
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "product_posts")
+@Table(name = "advertisement_posts")
 @ToString(onlyExplicitlyIncluded = true)
-public class ProductPost {
+public class AdvertisementPost {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @ToString.Include
     private Long id;
 
     @ToString.Include
-    private String productName;
+    private String advertisementName;
 
     @Column(length = 1000)
     private String description;
 
     @ElementCollection
-    @CollectionTable(name = "product_post_photo_urls",
-            joinColumns = @JoinColumn(name = "product_post_id"))
+    @CollectionTable(name = "advertisement_post_photo_urls",
+            joinColumns = @JoinColumn(name = "advertisement_post_id"))
     @Column(name = "photo_urls")
     private List<String> photoUrls;
-
-    @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
-    private ProductCategory category; // excluded from toString
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

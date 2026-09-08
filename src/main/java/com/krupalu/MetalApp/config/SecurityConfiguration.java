@@ -50,7 +50,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/v1/advertiserDashboard/**").hasAnyAuthority("ADVERTISER")
                         .requestMatchers("/api/v1/buyerDashboard/**").hasAnyAuthority("BUYER")
                         .requestMatchers("/api/v1/admin").hasAnyAuthority(Role.ADMIN.name())
-                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/uploads/**", "/advertisements/**").permitAll()
                         .anyRequest().authenticated())
 
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
