@@ -72,8 +72,8 @@ function BuyerCard({ name, country, requirement, onClick }) {
 
 export default function BuyersList() {
   const [buyers, setBuyers] = useState([]);
-  const [page, setPage] = useState(1); // Pagination is 1-indexed
-  const [rowsPerPage, setRowsPerPage] = useState(9); // number of cards per page
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(9);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [openModal, setOpenModal] = useState(false);
@@ -101,14 +101,13 @@ export default function BuyersList() {
     }
   }, [role]);
 
-  // Filter buyers by search term
+  
   const filteredBuyers = buyers.filter(
     (buyer) =>
       buyer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       buyer.country.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Apply pagination AFTER filtering
   const startIndex = (page - 1) * rowsPerPage;
   const paginatedBuyers = filteredBuyers.slice(
     startIndex,
@@ -135,15 +134,13 @@ export default function BuyersList() {
       }
     )
     .then(() => {
-      setOpenModal(false); // close the request modal
+      setOpenModal(false); 
 
-      // show your custom confirmation modal
       showConfirmation({
         title: "Email Sent",
         message: `Your request to contact ${selectedBuyer.fullName} has been sent to Admin.`,
         confirmText: "OK",
       }).then(() => {
-        // 👇 re-fetch buyers list after modal closes
         axios
           .get(
             role === "SELLER"

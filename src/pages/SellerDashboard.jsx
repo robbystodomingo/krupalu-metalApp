@@ -32,7 +32,7 @@ export default function SellerDashboard() {
   const [editOpen, setEditOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Unified fetch function
+
   const fetchPosts = async () => {
     try {
       const res = await axios.get("/api/v1/sellerDashboard/posts/getAllPosting", {
@@ -40,7 +40,12 @@ export default function SellerDashboard() {
       });
       let data = res.data;
 
-      // Apply sorting
+      const role = localStorage.getItem("role")?.toUpperCase();
+
+      if (role === "BUYER" || role === "ADVERTISER") {
+        data = data.filter((post) => post.approvalStatus === "APPROVED");
+      }
+
       data.sort((a, b) => {
         if (sortBy === "name") {
           return a.productName.localeCompare(b.productName);
@@ -58,11 +63,11 @@ export default function SellerDashboard() {
     }
   };
 
+
   useEffect(() => {
     fetchPosts();
   }, [sortBy]);
 
-  // Handlers
   const handleCardClick = (id) => {
     setSelectedProductId(id);
     setOpenDetailModal(true);
@@ -73,7 +78,6 @@ export default function SellerDashboard() {
     setSelectedProductId(null);
   };
 
-  // Pagination
   const startIndex = (page - 1) * pageSize;
   const paginatedPosts = posts.slice(startIndex, startIndex + pageSize);
   const totalPages = Math.ceil(posts.length / pageSize);
@@ -185,16 +189,25 @@ export default function SellerDashboard() {
         open={createOpen}
         handleClose={() => setCreateOpen(false)}
         mode="create"
-        onSuccess={() => {
-          showConfirmation({
-            title: "Product Listed",
-            message: "Your product has been successfully listed.",
-            confirmText: "OK",
-          }).then(() => {
-            fetchPosts();
-          });
+        onSuccess={(newPost) => {
+          const postWithStatus = { ...newPost, approvalStatus: "PENDING" };
+
+          axios.post("/api/v1/sellerDashboard/posts/create", postWithStatus, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          })
+            .then(() => {
+              showConfirmation({
+                title: "Product for review",
+                message: "Your product has been submitted for approval.",
+                confirmText: "OK",
+              }).then(() => {
+                fetchPosts();
+              });
+            })
+            .catch((err) => console.error("Error creating post:", err));
         }}
       />
+
 
       <ProductModal
         open={editOpen}

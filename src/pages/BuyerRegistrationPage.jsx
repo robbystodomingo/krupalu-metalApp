@@ -50,14 +50,14 @@ export default function BuyerRegistrationPage() {
       console.log("Buyer registered:", data);
 
       const confirmed = await showConfirmation({
-        title: "Registration Successful",
-        message: "Your Buyer account has been created successfully!",
+        title: "Buyer Registration is for approval",
+        message: "Your Buyer account is under review by our Administrators and will get back to you shortly. Thank you!",
         confirmText: "Got it!",
         cancelText: "Back"
       });
 
       if (confirmed){
-        navigate("/login");
+        navigate("/");
       }
     } catch (error) {
       console.error("Error:", error);

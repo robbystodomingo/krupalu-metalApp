@@ -7,16 +7,25 @@ import {
   TextField,
   Button,
   Link,
-  Paper
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from "@mui/material";
 
 function LoginPage({ setRole }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [openErrorModal, setOpenErrorModal] = useState(false);
+  const [errorType, setErrorType] = useState("");
   const navigate = useNavigate();
 
   async function login(event) {
     event.preventDefault();
+    setErrorMessage("");
+    setErrorType("");
     try {
       const response = await axios.post("api/v1/auth/signin", {
         email,
@@ -37,7 +46,23 @@ function LoginPage({ setRole }) {
       else navigate("/home");
     } catch (err) {
       console.error(err);
-      alert("Login failed");
+
+      let message = "Login failed";
+      let type = "other";
+
+      if (err.response && err.response.data) {
+        message = err.response.data.message || "Login failed";
+
+        if (message.toLowerCase().includes("pending")) {
+          type = "pending";
+        } else if (message.toLowerCase().includes("rejected")) {
+          type = "rejected";
+        }
+      }
+
+      setErrorMessage(message);
+      setErrorType(type);
+      setOpenErrorModal(true);
     }
   }
 
@@ -52,7 +77,7 @@ function LoginPage({ setRole }) {
         backgroundRepeat: "no-repeat",
         alignItems: "center",
         justifyContent: "flex-start",
-      pl: 10,
+        pl: 10,
       }}
     >
       <Paper
@@ -110,6 +135,24 @@ function LoginPage({ setRole }) {
           </Link>
         </Typography>
       </Paper>
+
+      <Dialog open={openErrorModal} onClose={() => setOpenErrorModal(false)}>
+        <DialogTitle>
+          {errorType === "pending" && "Account Pending Approval"}
+          {errorType === "rejected" && "Account Rejected"}
+          {errorType === "other" && "Login Error"}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            {errorMessage}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenErrorModal(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

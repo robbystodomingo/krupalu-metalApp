@@ -25,6 +25,9 @@ import { BrowserRouter,Routes,Route } from "react-router-dom";
 import SellersList from './pages/SellersList';
 import AdvertisersList from './pages/AdvertisersList';
 import BuyersList from './pages/BuyersList';
+import AdminBuyersList from './pages/AdminBuyersList'
+import AdminSellersList from './pages/AdminSellersList' 
+import AdminAdvertisersList from './pages/AdminAdvertisersList'
 
 import ProtectedRoute from "./component/ProtectedRoute";
 
@@ -52,6 +55,9 @@ function App() {
 
           {/* Protected routes */}
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/buyersList" element={<ProtectedRoute><AdminBuyersList /></ProtectedRoute>} />
+          <Route path="/admin/sellersList" element={<ProtectedRoute><AdminSellersList /></ProtectedRoute>} />
+          <Route path="/admin/advertisersList" element={<ProtectedRoute><AdminAdvertisersList /></ProtectedRoute>} />
           <Route path="/seller" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
           <Route path="/buyer" element={<ProtectedRoute><BuyerDashboard /></ProtectedRoute>} />
           <Route path="/advertiser" element={<ProtectedRoute><AdvertiserDashboard /></ProtectedRoute>} />

@@ -4,9 +4,27 @@ import React from 'react'
 
 export const SidebarData = [ 
   {
-    title: "Users",
-    path: "/admin/users",
-    icon: "👥",
+    title: "Dashboard",
+    path: "/admin",
+    icon: "🖥️",
+    roles: ["ADMIN"], // only admin
+  },
+  {
+    title: "Buyers",
+    path: "/admin/buyersList",
+    icon: "🛒",
+    roles: ["ADMIN"], // only admin
+  },
+  {
+    title: "Sellers",
+    path: "/admin/sellersList",
+    icon: "🏪",
+    roles: ["ADMIN"], // only admin
+  },
+  {
+    title: "Advertisers",
+    path: "/admin/advertisersList",
+    icon: "📢",
     roles: ["ADMIN"], // only admin
   },
   {
@@ -15,12 +33,7 @@ export const SidebarData = [
     icon: "🏪",
     roles: ["BUYER"], // only buyer
   },
-  {
-    title: "Advertisers",
-    path: "/buyer/advertisersList",
-    icon: "🛒",
-    roles: ["BUYER"], // only buyer
-  },
+
   {
     title: "Campaigns",
     path: "/advertiser",
