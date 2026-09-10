@@ -1,6 +1,7 @@
 package com.krupalu.MetalApp.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.krupalu.MetalApp.enums.ApprovalStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,6 +28,9 @@ public class AdvertisementPost {
 
     @Column(length = 1000)
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
 
     @ElementCollection
     @CollectionTable(name = "advertisement_post_photo_urls",

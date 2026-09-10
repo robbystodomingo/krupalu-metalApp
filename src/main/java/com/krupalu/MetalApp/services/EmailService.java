@@ -7,4 +7,6 @@ public interface EmailService {
     public void emailForBuyerOffer(String fullName);
 
     public void emailForAdvertiserOffer(String fullName);
+
+    public void emailForIntentToPurchase(String fullName);
 }

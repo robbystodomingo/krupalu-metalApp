@@ -4,11 +4,13 @@ import com.krupalu.MetalApp.dto.ProductPostRequest;
 import com.krupalu.MetalApp.entity.ProductCategory;
 import com.krupalu.MetalApp.entity.ProductPost;
 import com.krupalu.MetalApp.entity.User;
+import com.krupalu.MetalApp.enums.ApprovalStatus;
 import com.krupalu.MetalApp.repo.ProductCategoryRepository;
 import com.krupalu.MetalApp.repo.ProductPostRepository;
 import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.ProductPostService;
 import com.krupalu.MetalApp.util.MyUserDetails;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,28 +23,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @Transactional
 @Slf4j
+@RequiredArgsConstructor
 public class ProductPostServiceImpl implements ProductPostService {
 
     private final ProductPostRepository postRepository;
     private final ProductCategoryRepository categoryRepository;
 
     private final UserRepository userRepository;
-
-    public ProductPostServiceImpl(ProductCategoryRepository categoryRepository,
-                                  ProductPostRepository postRepository, UserRepository userRepository) {
-        this.categoryRepository = categoryRepository;
-        this.postRepository = postRepository;
-        this.userRepository = userRepository;
-    }
-
-
 
     @Override
     @Transactional
@@ -60,28 +53,29 @@ public class ProductPostServiceImpl implements ProductPostService {
                 .productName(productName)
                 .category(category)
                 .description(description)
+                .approvalStatus(ApprovalStatus.PENDING)
                 .user(user)
                 .build();
         tempPost = postRepository.save(tempPost);
 
         List<String> photoPaths = new ArrayList<>();
         for (MultipartFile photo : photos) {
-            // 👇 include post ID in the folder path
             String uploadDir = "D:/uploads/" + userId + "/" + tempPost.getId();
             Files.createDirectories(Paths.get(uploadDir));
 
-            // 👇 prefix filename with post ID to avoid collisions
             String fileName = tempPost.getId() + "_" + photo.getOriginalFilename();
             String filePath = uploadDir + "/" + fileName;
 
             Files.copy(photo.getInputStream(), Paths.get(filePath),
                     StandardCopyOption.REPLACE_EXISTING);
 
+            // Store the web-servable path, not the disk path
+            String webPath = "/uploads/" + userId + "/" + tempPost.getId() + "/" + fileName;
 
             log.info("Saved file at: {}", filePath);
-            log.info("Rewritten URL: {}", rewritePath(filePath));
+            log.info("Web-servable path: {}", webPath);
 
-            photoPaths.add(filePath);
+            photoPaths.add(webPath);
         }
 
         tempPost.setPhotoUrls(photoPaths);
@@ -97,26 +91,36 @@ public class ProductPostServiceImpl implements ProductPostService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         MyUserDetails userDetails = (MyUserDetails) auth.getPrincipal();
         String userId = userDetails.getId();
-        return postRepository.findByUserId(userId).stream()
+        String role = userDetails.getRole().name();
+
+        List<ProductPost> posts;
+
+        if ("SELLER".equalsIgnoreCase(role)) {
+            posts = postRepository.findByUserId(userId);
+        } else {
+            posts = postRepository.findByUser_IdAndApprovalStatus(userId, ApprovalStatus.APPROVED);
+        }
+
+        return posts.stream()
                 .map(post -> new ProductPostRequest(
                         post.getId(),
                         post.getProductName(),
                         post.getDescription(),
                         post.getPhotoUrls().stream()
-                                .map(this::rewritePath) // 👈 rewrite each path
+                                .map(this::rewritePath)
                                 .toList(),
                         post.getCategory() != null ? post.getCategory().getCategoryName() : null
                 ))
                 .toList();
     }
 
+
     @Override
     public ProductPostRequest getPostById(Long id, String userId) {
         ProductPost post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        // Optional: enforce ownership
-        if (!post.getUser().getId().toString().equals(userId)) {
+        if (!post.getUser().getId().equals(userId)) {
             throw new RuntimeException("Unauthorized access to post");
         }
 
@@ -155,8 +159,8 @@ public class ProductPostServiceImpl implements ProductPostService {
         ProductPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        // Optional: enforce ownership
-        if (!post.getUser().getId().toString().equals(userId)) {
+
+        if (!post.getUser().getId().equals(userId)) {
             throw new RuntimeException("Unauthorized access to post");
         }
 
@@ -190,7 +194,7 @@ public class ProductPostServiceImpl implements ProductPostService {
         ProductPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        if (!post.getUser().getId().toString().equals(userId)) {
+        if (!post.getUser().getId().equals(userId)) {
             throw new RuntimeException("Unauthorized access to post");
         }
 

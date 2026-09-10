@@ -12,6 +12,7 @@ import com.krupalu.MetalApp.services.AdvertisementPostService;
 import com.krupalu.MetalApp.util.MyUserDetails;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,18 +31,12 @@ import java.util.List;
 @Service
 @Transactional
 @Slf4j
+@RequiredArgsConstructor
 public class AdvertisementPostServiceImpl implements AdvertisementPostService {
 
     private final AdvertisementPostRepository advertisementPostRepository;
 
     private final UserRepository userRepository;
-
-
-    public AdvertisementPostServiceImpl(
-                                  AdvertisementPostRepository advertisementPostRepository, UserRepository userRepository) {
-        this.advertisementPostRepository = advertisementPostRepository;
-        this.userRepository = userRepository;
-    }
 
     @Override
     public AdvertisementPost createAdvertisement(String userId, String advertisementName,

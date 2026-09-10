@@ -31,9 +31,10 @@ public class UserServiceImpl implements UserService {
 
             return new MyUserDetails(
                     user.getId(),
-                    user.getEmail(),      // 👈 use email as username
+                    user.getEmail(),
                     user.getPassword(),
-                    Collections.emptyList() // map roles to authorities if needed
+                    user.getRole(),
+                    Collections.emptyList()
             );
         };
     }

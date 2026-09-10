@@ -5,6 +5,8 @@ import com.krupalu.MetalApp.dto.RefreshTokenRequest;
 import com.krupalu.MetalApp.dto.SignInRequest;
 import com.krupalu.MetalApp.dto.RegistrationRequest;
 import com.krupalu.MetalApp.entity.User;
+import com.krupalu.MetalApp.enums.ApprovalStatus;
+import com.krupalu.MetalApp.enums.Role;
 import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.AuthenticationService;
 import com.krupalu.MetalApp.services.JWTService;
@@ -36,7 +38,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final TokenRepository tokenRepository;
 
 
-    public JWTAuthenticationResponse registration(RegistrationRequest registrationRequest){
+    public JWTAuthenticationResponse registration(RegistrationRequest registrationRequest) {
+        // Build user entity
         var user = User.builder()
                 .fullName(registrationRequest.getFullName())
                 .email(registrationRequest.getEmail())
@@ -47,26 +50,52 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .category(registrationRequest.getCategory())
                 .requirement(registrationRequest.getRequirement())
                 .password(passwordEncoder.encode(registrationRequest.getPassword()))
+                .approvalStatus(
+                        registrationRequest.getRole() == Role.BUYER
+                                ? ApprovalStatus.PENDING
+                                : ApprovalStatus.APPROVED
+                )
                 .build();
 
         var savedUser = userRepository.save(user);
-        var jwtToken = jwtService.generateToken(user);
-        var refreshToken = jwtService.generateRefreshToken(new HashMap<>(),user);
-        saveUserToken(savedUser,jwtToken);
+
+        if (savedUser.getRole() == Role.BUYER && savedUser.getApprovalStatus() == ApprovalStatus.PENDING) {
+            return JWTAuthenticationResponse.builder()
+                    .token(null)
+                    .refreshToken(null)
+                    .email(savedUser.getEmail())
+                    .fullName(savedUser.getFullName())
+                    .role(savedUser.getRole().name())
+                    .build();
+        }
+
+        var jwtToken = jwtService.generateToken(savedUser);
+        var refreshToken = jwtService.generateRefreshToken(new HashMap<>(), savedUser);
+        saveUserToken(savedUser, jwtToken);
+
         return JWTAuthenticationResponse.builder()
                 .token(jwtToken)
                 .refreshToken(refreshToken)
-                .email(user.getEmail())
-                .fullName(user.getFullName())
-                .role(user.getRole().name())
+                .email(savedUser.getEmail())
+                .fullName(savedUser.getFullName())
+                .role(savedUser.getRole().name())
                 .build();
     }
+
 
     public JWTAuthenticationResponse signin(SignInRequest signInRequest){
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signInRequest.getEmail(),
                 signInRequest.getPassword()));
 
         var user = userRepository.findByEmail(signInRequest.getEmail()).orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+        if (user.getRole() == Role.BUYER) {
+            if (user.getApprovalStatus() == ApprovalStatus.PENDING) {
+                throw new IllegalStateException("Your account is pending admin approval.");
+            }
+            if (user.getApprovalStatus() == ApprovalStatus.REJECTED) {
+                throw new IllegalStateException("Your registration was rejected by admin.");
+            }
+        }
         var jwt = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(new HashMap<>(), user);
         revokeAllUserTokens(user);

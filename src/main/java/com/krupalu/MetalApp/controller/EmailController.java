@@ -29,4 +29,12 @@ public class EmailController {
         emailService.emailForAdvertiserOffer(fullName);
         return "Email sent to Admin to discuss my product to: " + fullName;
     }
+
+    @PostMapping("/intentToPurchase")
+    public String emailForIntentToPurchase(@RequestParam String fullName) {
+        emailService.emailForIntentToPurchase(fullName);
+        return "Email sent to Admin to discuss my intent to purchase product's from: " + fullName;
+    }
+
+
 }

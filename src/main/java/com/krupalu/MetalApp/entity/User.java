@@ -1,6 +1,7 @@
 package com.krupalu.MetalApp.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.krupalu.MetalApp.enums.ApprovalStatus;
 import com.krupalu.MetalApp.enums.Role;
 import com.krupalu.MetalApp.util.CustomIdGenerator;
 import jakarta.persistence.*;
@@ -36,6 +37,9 @@ public class User implements UserDetails {
     private String email;
 
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
 
     @Column(length = 1000)
     private String requirement;

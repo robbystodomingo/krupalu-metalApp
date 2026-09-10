@@ -27,7 +27,7 @@ public class EmailServiceImpl implements EmailService {
         message.setSubject("Proposal to Offer My Product to Buyers");
         message.setText("Hello Admin,\n" +
                 "\n" +
-                "I would like to express my interest in offering my product to Mr./Ms. " + fullName + ". I would appreciate the opportunity to discuss the " +
+                "I would like to express my interest in offering my product to " + fullName + ". I would appreciate the opportunity to discuss the " +
                 "requirements of the buyer and potentially selling my product.\n" +
                 "\n" +
                 "Thank you for your time, and I look forward to hearing from you.\n" +
@@ -43,7 +43,23 @@ public class EmailServiceImpl implements EmailService {
         message.setSubject("Proposal to Advertise My Product");
         message.setText("Hello Admin,\n" +
                 "\n" +
-                "I would like to express my interest in discussing my product to be advertised to Mr./Ms. " + fullName + ". I would appreciate the opportunity to discuss the " +
+                "I would like to express my interest in discussing my product to be advertised to  " + fullName + ". I would appreciate the opportunity to discuss the " +
+                "requirements and process for advertising my product on your platform.\n" +
+                "\n" +
+                "Thank you for your time, and I look forward to hearing from you.\n" +
+                "\n");
+        mailSender.send(message);
+    }
+
+    @Override
+    public void emailForIntentToPurchase(String fullName) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("robbystodomingo@gmail.com");
+        message.setTo("weefeephotobooth@gmail.com");
+        message.setSubject("Intent to purchase Seller's product");
+        message.setText("Hello Admin,\n" +
+                "\n" +
+                "I would like to express my interest in discussing to purchase from " + fullName + ". I would appreciate the opportunity to discuss the " +
                 "requirements and process for advertising my product on your platform.\n" +
                 "\n" +
                 "Thank you for your time, and I look forward to hearing from you.\n" +

@@ -1,27 +1,27 @@
 package com.krupalu.MetalApp.util;
 
+import com.krupalu.MetalApp.enums.Role;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-
+@RequiredArgsConstructor
 public class MyUserDetails implements UserDetails {
 
     private final String id;
     private final String username;
     private final String password;
-    private final Collection<? extends GrantedAuthority> authorities;
 
-    public MyUserDetails(String id, String username, String password,
-                         Collection<? extends GrantedAuthority> authorities) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.authorities = authorities;
-    }
+    private final Role role;
+    private final Collection<? extends GrantedAuthority> authorities;
 
     public String getId() {
         return id;
+    }
+
+    public Role getRole() {
+        return role;
     }
 
     @Override
