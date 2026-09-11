@@ -5,6 +5,8 @@ import com.krupalu.MetalApp.enums.ApprovalStatus;
 import com.krupalu.MetalApp.enums.Role;
 import com.krupalu.MetalApp.util.CustomIdGenerator;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +35,9 @@ public class User implements UserDetails {
 
     private String country;
 
+    @Pattern(regexp = "^[0-9]{10,15}$", message = "Phone must be 10–15 digits")
     private String phoneNumber;
+    @Email(message = "Invalid email format")
     private String email;
 
     private String password;

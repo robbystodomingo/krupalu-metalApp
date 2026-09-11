@@ -6,6 +6,7 @@ import com.krupalu.MetalApp.entity.AdvertisementPost;
 import com.krupalu.MetalApp.entity.ProductCategory;
 import com.krupalu.MetalApp.entity.ProductPost;
 import com.krupalu.MetalApp.entity.User;
+import com.krupalu.MetalApp.enums.ApprovalStatus;
 import com.krupalu.MetalApp.repo.AdvertisementPostRepository;
 import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.AdvertisementPostService;
@@ -50,6 +51,7 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
         AdvertisementPost tempPost = AdvertisementPost.builder()
                 .advertisementName(advertisementName)
                 .description(description)
+                .approvalStatus(ApprovalStatus.PENDING)
                 .user(user)
                 .build();
         tempPost = advertisementPostRepository.save(tempPost);
