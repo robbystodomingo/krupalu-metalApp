@@ -20,8 +20,8 @@ function BuyerCard({ name, country, requirement, onClick }) {
     <Card
       onClick={onClick}
       sx={{
-        width: 280,
-        height: 180,
+        width: "100%", // fills whatever column width the grid gives it
+        aspectRatio: "14 / 9", // keeps roughly your original 280:180 proportions, but scales fluidly
         border: "1px solid #eee",
         boxShadow: 2,
         transition: "transform 0.3s ease, box-shadow 0.3s ease",
@@ -73,7 +73,7 @@ function BuyerCard({ name, country, requirement, onClick }) {
 export default function BuyersList() {
   const [buyers, setBuyers] = useState([]);
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(9);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [openModal, setOpenModal] = useState(false);
@@ -101,7 +101,7 @@ export default function BuyersList() {
     }
   }, [role]);
 
-  
+
   const filteredBuyers = buyers.filter(
     (buyer) =>
       buyer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -121,66 +121,69 @@ export default function BuyersList() {
   };
 
   const handleSendEmail = () => {
-  axios
-    .post(
-      `/api/v1/email/offerBuyer?fullName=${encodeURIComponent(
-        selectedBuyer.fullName
-      )}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    )
-    .then(() => {
-      setOpenModal(false); 
+    axios
+      .post(
+        `/api/v1/email/offerBuyer?fullName=${encodeURIComponent(
+          selectedBuyer.fullName
+        )}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      )
+      .then(() => {
+        setOpenModal(false);
 
-      showConfirmation({
-        title: "Email Sent",
-        message: `Your request to contact ${selectedBuyer.fullName} has been sent to Admin.`,
-        confirmText: "OK",
-      }).then(() => {
-        axios
-          .get(
-            role === "SELLER"
-              ? "/api/v1/sellerDashboard/buyersList"
-              : "/api/v1/advertiserDashboard/buyersList",
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          )
-          .then((res) => setBuyers(res.data))
-          .catch((err) => console.error("Error refreshing buyers:", err));
-      });
-    })
-    .catch((err) => console.error("Error sending email:", err));
-};
+        showConfirmation({
+          title: "Email Sent",
+          message: `Your request to contact ${selectedBuyer.fullName} has been sent to Admin.`,
+          confirmText: "OK",
+        }).then(() => {
+          axios
+            .get(
+              role === "SELLER"
+                ? "/api/v1/sellerDashboard/buyersList"
+                : "/api/v1/advertiserDashboard/buyersList",
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
+            )
+            .then((res) => setBuyers(res.data))
+            .catch((err) => console.error("Error refreshing buyers:", err));
+        });
+      })
+      .catch((err) => console.error("Error sending email:", err));
+  };
 
 
   return (
     <Box sx={{ p: 3, mt: 4 }}>
       <Box textAlign="center" mb={4}>
-        <Typography variant="h4" gutterBottom>
-          Buyers List
-        </Typography>
-        <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          maxWidth="600px"
-          mx="auto"
-          sx={{ p: 3, mt: 4 }}
-        >
-          Browse buyers from around the world. Click a card to request Admin to
-          offer them your product.
-        </Typography>
+        <Box textAlign="center" mb={4}>
+          <Typography variant="h4" gutterBottom>
+            Buyers List
+          </Typography>
+          <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
+        </Box>
+        <Box>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ textAlign: "left", mb: 2 }}
+          >
+            Browse buyers from around the world. Click a card to request Admin to
+            offer them your product.
+          </Typography>
+        </Box>
       </Box>
 
+
       {/* Search bar */}
-      <Box display="flex" justifyContent="center" mb={3}>
+      <Box display="flex" justifyContent="flex-start" mb={3}>
         <TextField
           label="Search Buyer by Name or Country"
           variant="outlined"
@@ -194,24 +197,24 @@ export default function BuyersList() {
       </Box>
 
       {/* Grid */}
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <Grid
-          container
-          spacing={3}
-          justifyContent="center"
-          sx={{ maxWidth: 1500, margin: "0 auto" }}
-        >
-          {paginatedBuyers.map((buyer, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <BuyerCard
-                name={buyer.fullName}
-                country={buyer.country}
-                requirement={buyer.requirement}
-                onClick={() => handleCardClick(buyer)}
-              />
-            </Grid>
-          ))}
-        </Grid>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, 300px)", // exactly 5 fixed-width columns
+          gap: 3, // matches your old spacing={3}
+          justifyContent: "flex-start", // centers the WHOLE grid block, not each row individually
+        }}>
+
+        {paginatedBuyers.map((buyer, index) => (
+          <Grid item xs={12} sm={6} md={4} key={index}>
+            <BuyerCard
+              name={buyer.fullName}
+              country={buyer.country}
+              requirement={buyer.requirement}
+              onClick={() => handleCardClick(buyer)}
+            />
+          </Grid>
+        ))}
       </Box>
 
       {/* Pagination */}

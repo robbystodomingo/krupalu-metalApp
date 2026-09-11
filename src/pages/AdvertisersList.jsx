@@ -19,8 +19,8 @@ function AdvertiserCard({ name, country, onClick }) {
     <Card
       onClick={onClick}
       sx={{
-        width: 280,
-        height: 180,
+        width: "100%", // fills whatever column width the grid gives it
+        aspectRatio: "14 / 9", // keeps roughly your original 280:180 proportions, but scales fluidly
         border: "1px solid #eee",
         boxShadow: 2,
         transition: "transform 0.3s ease, box-shadow 0.3s ease",
@@ -140,26 +140,28 @@ export default function AdvertisersList() {
   return (
     <Box sx={{ p: 3, mt: 4 }}>
       <Box textAlign="center" mb={4}>
-        <Typography variant="h4" gutterBottom>
-          Advertisers List
-        </Typography>
+        <Box textAlign="center" mb={4}>
+          <Typography variant="h4" gutterBottom>
+            Advertisers List
+          </Typography>
 
-        <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
-        
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          maxWidth="600px"
-          mx="auto"
-          sx={{ p: 3, mt: 4 }}
-        >
-          Browse advertisers from around the world. Click a card to request Admin
-          to offer them your product for advertisement.
-        </Typography>
+          <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ textAlign: "left", mb: 2 }}
+          >
+            Browse advertisers from around the world. Click a card to request Admin
+            to offer them your product for advertisement.
+          </Typography>
+        </Box>
       </Box>
 
       {/* Search bar */}
-      <Box display="flex" justifyContent="center" mb={3}>
+      <Box display="flex" justifyContent="flex-start" mb={3}>
         <TextField
           label="Search Advertiser by Name or Country"
           variant="outlined"
@@ -173,18 +175,23 @@ export default function AdvertisersList() {
       </Box>
 
       {/* Grid */}
-      <Box display="flex" justifyContent="center">
-        <Grid container spacing={3} justifyContent="center" maxWidth="900px">
-          {paginatedAdvertisers.map((advertiser, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <AdvertiserCard
-                name={advertiser.fullName}
-                country={advertiser.country}
-                onClick={() => handleCardClick(advertiser)}
-              />
-            </Grid>
-          ))}
-        </Grid>
+      {/* Grid */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, 280px)", // exactly 5 fixed-width columns
+          gap: 3, // matches your old spacing={3}
+          justifyContent: "flex-start", // centers the WHOLE grid block, not each row individually
+        }}
+      >
+        {paginatedAdvertisers.map((advertiser, index) => (
+          <AdvertiserCard
+            key={index}
+            name={advertiser.fullName}
+            country={advertiser.country}
+            onClick={() => handleCardClick(advertiser)}
+          />
+        ))}
       </Box>
 
       {/* Pagination */}

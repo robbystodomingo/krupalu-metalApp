@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Box, Typography, Button, Divider, IconButton } from "@mui/material";
-import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
+import { ArrowBackIos, ArrowForwardIos, Close } from "@mui/icons-material";
 import Slider from "react-slick";
 import axios from "axios";
 
@@ -21,7 +21,6 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
 
   if (!post) return null;
 
-  // Custom arrow components
   const NextArrow = (props) => {
     const { onClick } = props;
     return (
@@ -78,25 +77,52 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          width: 600,
+          width: 900, // was 600 — more room overall, and for the photo carousel especially
+          maxWidth: "90vw", // keeps it from overflowing on smaller screens
+          maxHeight: "90vh",
+          overflowY: "auto",
           bgcolor: "background.paper",
           boxShadow: 24,
           p: 4,
           borderRadius: 2,
         }}
       >
+        {/* Close button, upper right */}
+        <IconButton
+          onClick={handleClose}
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            zIndex: 2,
+          }}
+        >
+          <Close />
+        </IconButton>
+
         {/* Carousel for product photos */}
         {post.photoUrls && post.photoUrls.length > 0 && (
           <Slider {...settings}>
             {post.photoUrls.map((photo, index) => (
-              <Box key={index} sx={{ textAlign: "center" }}>
+              <Box
+                key={index}
+                sx={{
+                  textAlign: "center",
+                  height: 500, // fixed viewing area, was capped only by maxHeight before
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor: "grey.100", // fills empty space around non-matching aspect ratios neutrally
+                  borderRadius: 2,
+                }}
+              >
                 <img
                   src={photo}
                   alt={`${post.productName} ${index + 1}`}
                   style={{
-                    width: "100%",
-                    maxHeight: "300px",
-                    objectFit: "cover",
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    objectFit: "contain", // was "cover" — this is what preserves true aspect ratio, no cropping
                     borderRadius: 8,
                   }}
                 />

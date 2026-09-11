@@ -36,3 +36,9 @@
     transform: rotate(360deg);
   }
 }
+
+.react-tel-input .form-control:focus {
+  border-color: #1976d2 !important; /* MUI primary blue */
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.25);
+}
+

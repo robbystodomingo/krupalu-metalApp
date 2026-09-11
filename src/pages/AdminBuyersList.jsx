@@ -20,7 +20,8 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions
+    DialogActions,
+    Chip,
 } from "@mui/material";
 import axios from "axios";
 
@@ -86,6 +87,13 @@ export default function AdminBuyersList() {
         setSelectedRequirement("");
     };
 
+    function statusChipColor(status) {
+        const s = String(status || "").toLowerCase();
+        if (s.includes("approve") || s.includes("approved")) return "success";
+        if (s.includes("reject") || s.includes("rejected")) return "error";
+        return "warning";
+    }
+
     return (
         <Box sx={{ p: 3, mt: 4 }}>
             <Typography variant="h4" gutterBottom>
@@ -140,7 +148,17 @@ export default function AdminBuyersList() {
                                 <TableCell>{buyer.email}</TableCell>
                                 <TableCell>{buyer.phoneNumber}</TableCell>
                                 <TableCell>{buyer.country}</TableCell>
-                                <TableCell>{buyer.approvalStatus}</TableCell>
+                                <TableCell>
+                                    {buyer.approvalStatus ? (
+                                        <Chip
+                                            label={buyer.approvalStatus}
+                                            color={statusChipColor(buyer.approvalStatus)}
+                                            size="small"
+                                        />
+                                    ) : (
+                                        <Typography variant="body2" color="text.secondary">Pending</Typography>
+                                    )}
+                                </TableCell>
                                 <TableCell>
                                     <Button
                                         variant="outlined"

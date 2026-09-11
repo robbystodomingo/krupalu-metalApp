@@ -17,7 +17,7 @@ import {
 import axios from "axios";
 import PostDetailModal from "../modals/PostDetailModal";
 import ProductModal from "../modals/ProductModal";
-import { showConfirmation } from "../utils/ConfirmationModal"; // 👈 import helper
+import { showConfirmation } from "../utils/ConfirmationModal";
 
 export default function SellerDashboard() {
   const [posts, setPosts] = useState([]);
@@ -91,7 +91,7 @@ export default function SellerDashboard() {
       <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
 
       {/* Controls row */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4, p: 5 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4, py: 2 }}>
         <Button variant="contained" color="primary" onClick={() => setCreateOpen(true)}>
           Add Product
         </Button>
@@ -111,68 +111,72 @@ export default function SellerDashboard() {
       </Box>
 
       {/* Product cards */}
-      <Grid container spacing={5} sx={{ justifyContent: "center", mb: 2, p: 3 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+          gap: 3,
+          mb: 2,
+        }}
+      >
         {paginatedPosts.map((post) => (
-          <Grid item xs={12} sm={6} md={4} key={post.id}>
-            <Card
-              onClick={() => handleCardClick(post.id)}
-              sx={{
-                cursor: "pointer",
-                minWidth: 200,
-                maxWidth: 250,
-                minHeight: 340,
-                maxHeight: 380,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-8px) scale(1.03)",
-                  boxShadow: 6,
-                },
-                margin: "0 auto",
-              }}
-            >
-              {(() => {
-                const firstImage =
-                  (post.photoUrls && post.photoUrls[0]) ||
-                  (post.photos && post.photos[0]);
-                return (
-                  firstImage && (
-                    <CardMedia
-                      component="img"
-                      sx={{ height: 180, objectFit: "cover" }}
-                      image={firstImage}
-                      alt={post.productName}
-                    />
-                  )
-                );
-              })()}
+          <Card
+            key={post.id}
+            onClick={() => handleCardClick(post.id)}
+            sx={{
+              cursor: "pointer",
+              width: "100%",
+              aspectRatio: "5 / 8", // back to uniform card height
+              display: "flex",
+              flexDirection: "column",
+              transition: "transform 0.3s ease, box-shadow 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-8px) scale(1.03)",
+                boxShadow: 6,
+              },
+            }}
+          >
+            {(() => {
+              const firstImage =
+                (post.photoUrls && post.photoUrls[0]) ||
+                (post.photos && post.photos[0]);
+              return (
+                firstImage && (
+                  <CardMedia
+                    component="img"
+                    sx={{ height: "58%", objectFit: "cover" }} // bigger image footprint, was 45%
+                    image={firstImage}
+                    alt={post.productName}
+                  />
+                )
+              );
+            })()}
 
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6">{post.productName}</Typography>
-                <Typography variant="subtitle2" color="text.secondary">
-                  {post.categoryName}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  mt={1}
-                  sx={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "normal",
-                  }}
-                >
-                  {post.description}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+            <CardContent sx={{ flexGrow: 1, overflow: "hidden" }}>
+              <Typography variant="h6" noWrap>
+                {post.productName}
+              </Typography>
+              <Typography variant="subtitle2" color="text.secondary" noWrap>
+                {post.categoryName}
+              </Typography>
+              <Typography
+                variant="body2"
+                mt={1}
+                sx={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2, // trimmed from 3 to 2, since there's less vertical room left for text now
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "normal",
+                }}
+              >
+                {post.description}
+              </Typography>
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
+      </Box>
 
       {/* Pagination */}
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4, p: 4 }}>

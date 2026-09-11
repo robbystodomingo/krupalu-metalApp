@@ -1,32 +1,79 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { TextField, Button, MenuItem, Box, Stepper, Step, StepLabel, Typography } from "@mui/material";
+import {
+  TextField,
+  Button,
+  MenuItem,
+  Box,
+  Stepper,
+  Step,
+  StepLabel,
+  Typography,
+  InputAdornment,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const steps = ["Account Setup", "Role Details"];
 
+const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
 export default function RegistrationPage() {
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Modal state
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   const navigate = useNavigate();
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    if (!value) {
+      setEmailError("Email is required");
+    } else if (!isValidEmail(value)) {
+      setEmailError("Please enter a valid email address");
+    } else {
+      setEmailError("");
+    }
+  };
+
+  const showError = (message) => {
+    setErrorMessage(message);
+    setErrorModalOpen(true);
+  };
 
   const handleNext = async (e) => {
     e.preventDefault();
 
+    if (!isValidEmail(email)) {
+      setEmailError("Please enter a valid email address");
+      showError("Invalid email format. Please enter a valid email.");
+      return;
+    }
+
     if (!role) {
-      alert("Please select a role");
+      showError("Please select a role before continuing.");
       return;
     }
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      showError("Passwords do not match!");
       return;
     }
 
     try {
-      
-      // Navigate to role-specific page
       if (role === "buyer") {
         navigate("/joinasbuyer", { state: { email, password } });
       } else if (role === "seller") {
@@ -36,86 +83,119 @@ export default function RegistrationPage() {
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Registration failed. Please try again.");
+      showError("Registration failed. Please try again.");
     }
   };
 
   return (
-    <Box
-      component="form"
-      onSubmit={handleNext}
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        width: 800,
-        margin: "auto",
-        mt: 5,
-        p: 3,
-        border: "1px solid #ccc",
-        borderRadius: 2,
-        boxShadow: 2,
-      }}
-    >
-       <Stepper activeStep={0} alternativeLabel>
+    <>
+      <Box
+        component="form"
+        onSubmit={handleNext}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          width: 800,
+          margin: "auto",
+          mt: 5,
+          p: 3,
+          border: "1px solid #ccc",
+          borderRadius: 2,
+          boxShadow: 2,
+        }}
+      >
+        <Stepper activeStep={0} alternativeLabel>
           {steps.map((label, index) => (
             <Step key={label}>
-              <StepLabel
-                onClick={() => {
-                  if (index === 0) navigate("/register");
-                  if (index === 1 && role) {
-                    if (role === "buyer") navigate("/joinasbuyer", { state: { email, password } });
-                    if (role === "seller") navigate("/joinasseller", { state: { email, password } });
-                    if (role === "advertiser") navigate("/joinasadvertiser", { state: { email, password } });
-                  }
-                }}
-                sx={{ cursor: "pointer" }}
-              >
-                {label}
-              </StepLabel>
+              <StepLabel sx={{ cursor: "pointer" }}>{label}</StepLabel>
             </Step>
           ))}
         </Stepper>
 
-      <Typography variant="h5" align="center" gutterBottom sx={{ fontWeight: "bold" }}>
-        Register @ Krupalu Metal Inc!
-      </Typography>
+        <Typography variant="h5" align="center" gutterBottom sx={{ fontWeight: "bold" }}>
+          Register @ Krupalu Metal Inc!
+        </Typography>
 
-      <TextField
-        label="Email"
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <TextField
-        label="Password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <TextField
-        label="Confirm Password"
-        type="password"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        required
-      />
-      <TextField
-        select
-        label="Role"
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-        required
-      >
-        <MenuItem value="buyer">Buyer</MenuItem>
-        <MenuItem value="seller">Seller</MenuItem>
-        <MenuItem value="advertiser">Advertiser</MenuItem>
-      </TextField>
-      <Button type="submit" variant="contained">
-        Next
-      </Button>
-    </Box>
+        <TextField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={handleEmailChange}
+          error={Boolean(emailError)}
+          helperText={emailError}
+          required
+        />
+
+        <TextField
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <TextField
+          label="Confirm Password"
+          type={showConfirmPassword ? "text" : "password"}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  edge="end"
+                >
+                  {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <TextField
+          select
+          label="Role"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          required
+        >
+          <MenuItem value="buyer">Buyer</MenuItem>
+          <MenuItem value="seller">Seller</MenuItem>
+          <MenuItem value="advertiser">Advertiser</MenuItem>
+        </TextField>
+
+        <Button type="submit" variant="contained">
+          Next
+        </Button>
+      </Box>
+
+      {/* Error Modal */}
+      <Dialog open={errorModalOpen} onClose={() => setErrorModalOpen(false)}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>
+          <Typography>{errorMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setErrorModalOpen(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

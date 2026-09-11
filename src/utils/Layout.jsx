@@ -32,20 +32,21 @@ export default function Layout({ role, setRole, children }) {
       <Box
         component="main"
         sx={{
-          flexGrow: shouldHideNavbar ? 1 : 1,
-          width: shouldHideNavbar ? "100%" : "auto",
-          minWidth: shouldHideNavbar ? "100%" : 1650,
-          maxWidth: shouldHideNavbar ? "100%" : 1920,
-          minHeight: "calc(100vh - 64px)",
-          maxHeight: "calc(100vh - 64px)",
+          flexGrow: 1,
+          width: shouldHideNavbar
+            ? "100%"
+            : `calc(100% - ${role && open ? drawerWidth : 0}px)`,
+          minWidth: 0, // remove the fixed floor entirely
+          maxWidth: "100%", // let it use all available space, capped by the viewport
           marginTop: !shouldHideNavbar ? "64px" : "0",
           marginLeft: !shouldHideNavbar && role && open ? `${drawerWidth}px` : 0,
-          transition: "margin-left 0.3s ease",
+          minHeight: "calc(100vh - 64px)",
+          maxHeight: "calc(100vh - 64px)",
+          transition: "margin-left 0.3s ease, width 0.3s ease", // animate width too, not just margin
           boxShadow: "none",
           borderRight: "none",
           backgroundImage: "none",
           p: { xs: 0, md: 0 },
-          // overflowX: "hidden",
         }}
       >
         {children}
