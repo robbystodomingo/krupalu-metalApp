@@ -36,8 +36,8 @@ export default function Layout({ role, setRole, children }) {
           width: shouldHideNavbar
             ? "100%"
             : `calc(100% - ${role && open ? drawerWidth : 0}px)`,
-          minWidth: 0, // remove the fixed floor entirely
-          maxWidth: "100%", // let it use all available space, capped by the viewport
+          minWidth: 0,
+          maxWidth: "100%",
           marginTop: !shouldHideNavbar ? "64px" : "0",
           marginLeft: !shouldHideNavbar && role && open ? `${drawerWidth}px` : 0,
           minHeight: "calc(100vh - 64px)",

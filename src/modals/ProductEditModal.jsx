@@ -68,17 +68,20 @@ export default function ProductEditModal({ open = false, handleClose, product })
     }
   }, [open]);
 
+  // When uploading new files
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "photos") {
-      const fileArray = Array.from(files);
+      const fileArray = Array.from(files).map((file) => ({
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }));
       setFormData((prev) => ({ ...prev, photos: fileArray }));
-      const urls = fileArray.map((file) => URL.createObjectURL(file));
-      setPreviewUrls(urls);
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
+
 
   const handleSubmit = async () => {
     try {
@@ -87,7 +90,7 @@ export default function ProductEditModal({ open = false, handleClose, product })
       if (formData.categoryId) data.append("categoryId", formData.categoryId);
       if (formData.description) data.append("description", formData.description);
       if (formData.photos.length > 0) {
-        formData.photos.forEach((file) => data.append("photos", file));
+        formData.photos.forEach((photoObj) => data.append("photos", photoObj.file));
       }
 
       await axios.put(`/api/v1/sellerDashboard/posts/edit/${product.id}`, data, {
@@ -165,19 +168,95 @@ export default function ProductEditModal({ open = false, handleClose, product })
           />
         </Button>
 
-        {previewUrls.length > 0 && (
+        {formData.photos.length > 0 && (
           <Box mt={2} sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-            {previewUrls.map((url, idx) => (
+            {formData.photos.map((photoObj, idx) => (
               <Box
                 key={idx}
-                component="img"
-                src={url}
-                alt={`preview-${idx}`}
-                sx={{ width: 100, height: 100, objectFit: "cover", borderRadius: 1 }}
-              />
+                sx={{
+                  position: "relative",
+                  width: 100,
+                  height: 100,
+                  borderRadius: 1,
+                  overflow: "hidden",
+                }}
+              >
+                <Box
+                  component="img"
+                  src={photoObj.previewUrl}
+                  alt={`preview-${idx}`}
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: 1,
+                  }}
+                />
+
+                {/* Delete button */}
+                <Button
+                  size="small"
+                  color="error"
+                  variant="contained"
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      photos: prev.photos.filter((_, i) => i !== idx),
+                    }));
+                  }}
+                  sx={{
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    minWidth: "auto",
+                    p: "2px 6px",
+                    fontSize: "0.7rem",
+                  }}
+                >
+                  ✕
+                </Button>
+
+                {/* Replace button */}
+                <Button
+                  size="small"
+                  variant="contained"
+                  component="label"
+                  sx={{
+                    position: "absolute",
+                    bottom: 4,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    minWidth: "auto",
+                    p: "2px 6px",
+                    fontSize: "0.7rem",
+                  }}
+                >
+                  Change
+                  <input
+                    type="file"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const newPhoto = {
+                          file,
+                          previewUrl: URL.createObjectURL(file),
+                        };
+                        setFormData((prev) => {
+                          const newPhotos = [...prev.photos];
+                          newPhotos[idx] = newPhoto;
+                          return { ...prev, photos: newPhotos };
+                        });
+                      }
+                    }}
+                  />
+                </Button>
+              </Box>
             ))}
           </Box>
         )}
+
+
 
         <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
 

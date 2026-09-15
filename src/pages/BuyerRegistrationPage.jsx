@@ -206,7 +206,7 @@ export default function BuyerRegistrationPage() {
             </Typography>
 
             <PhoneInput
-              country={"ph"}
+              country={"us"}
               value={phoneNumber}
               onChange={(value) => {
                 setPhoneNumber(value);
@@ -258,7 +258,7 @@ export default function BuyerRegistrationPage() {
           />
         </Grid>
 
-        <Grid item xs={12} sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+        <Grid item xs={12} sx={{ display: "flex", justifyContent: "space-between", gap: 2, mt: 2 }}>
           <Button variant="outlined" onClick={() => navigate("/register")}>
             Back
           </Button>

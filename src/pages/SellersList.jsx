@@ -298,17 +298,15 @@ export default function SellersList() {
         <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
         <Typography
           variant="body1"
-          color="text.secondary"
-          maxWidth="600px"
-          mx="auto"
-          sx={{ p: 3, mt: 4 }}
+            color="text.secondary"
+            sx={{ textAlign: "left", mb: 2 }}
         >
           Browse sellers from around the world. Click a card to see their
           products. Select a product to request Admin to connect you.
         </Typography>
       </Box>
 
-      <Box display="flex" justifyContent="center" mb={3}>
+      <Box display="flex" justifyContent="flex-start" mb={3}>
         <TextField
           label="Search Seller by Name or Country"
           variant="outlined"
@@ -321,13 +319,13 @@ export default function SellersList() {
         />
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <Grid
-          container
-          spacing={3}
-          justifyContent="center"
-          sx={{ maxWidth: 1500, margin: "0 auto" }}
-        >
+      <Box  sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, 300px)", // exactly 5 fixed-width columns
+          gap: 3, // matches your old spacing={3}
+          justifyContent: "flex-start", // centers the WHOLE grid block, not each row individually
+        }}>
+        
           {paginatedSellers.map((seller, index) => (
             <Grid item xs={12} sm={6} md={4} key={seller.id || index}>
               <SellerCard
@@ -338,7 +336,7 @@ export default function SellersList() {
               />
             </Grid>
           ))}
-        </Grid>
+        
       </Box>
 
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4, p: 4 }}>

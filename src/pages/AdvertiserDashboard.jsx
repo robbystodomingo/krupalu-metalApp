@@ -85,7 +85,7 @@ export default function AdvertiserDashboard() {
       <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
 
       {/* Controls row */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4, p: 5 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4, py: 2 }}>
         <Button variant="contained" color="primary" onClick={() => setCreateOpen(true)}>
           Post Advertisement
         </Button>
@@ -104,64 +104,70 @@ export default function AdvertiserDashboard() {
       </Box>
 
       {/* Product cards */}
-      <Grid container spacing={5} sx={{ justifyContent: "center", mb: 2, p: 3 }}>
+      <Box sx={{
+        display: "grid",
+        gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+        gap: 3,
+        mb: 2,
+      }}>
         {paginatedAdvertisements.map((advertisement) => (
-          <Grid item xs={12} sm={6} md={4} key={advertisement.id}>
-            <Card
-              onClick={() => handleCardClick(advertisement.id)}
-              sx={{
-                cursor: "pointer",
-                minWidth: 200,
-                maxWidth: 250,
-                minHeight: 340,
-                maxHeight: 380,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-8px) scale(1.03)",
-                  boxShadow: 6,
-                },
-                margin: "0 auto",
-              }}
-            >
-              {(() => {
-                const firstImage = advertisement.photoUrls?.[0];
 
-                return (
-                  firstImage && (
-                    <CardMedia
-                      ccomponent="img"
-                      sx={{ height: 180, objectFit: "cover" }}
-                      image={firstImage}
-                      alt={advertisement.advertisementName || "Advertisement"}
-                    />
-                  )
-                );
-              })()}
+          <Card
+            onClick={() => handleCardClick(advertisement.id)}
+            sx={{
+              cursor: "pointer",
+              minWidth: 200,
+              maxWidth: 250,
+              minHeight: 340,
+              maxHeight: 380,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              transition: "transform 0.3s ease, box-shadow 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-8px) scale(1.03)",
+                boxShadow: 6,
+              },
+              margin: "0 auto",
+            }}
+          >
+            {(() => {
+              const firstImage = advertisement.photoUrls?.[0];
 
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6">{advertisement.advertisementName}</Typography>
-                <Typography
-                  variant="body2"
-                  mt={1}
-                  sx={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "normal",
-                  }}
-                >
-                  {advertisement.description}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+              return (
+                firstImage && (
+                  <CardMedia
+                    ccomponent="img"
+                    sx={{ height: 180, objectFit: "cover" }}
+                    image={firstImage}
+                    alt={advertisement.advertisementName || "Advertisement"}
+                  />
+                )
+              );
+            })()}
+
+            <CardContent sx={{ flexGrow: 1 }}>
+              <Typography variant="h6">{advertisement.advertisementName}</Typography>
+              <Typography
+                variant="body2"
+                mt={1}
+                sx={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "normal",
+                }}
+              >
+                {advertisement.description}
+              </Typography>
+            </CardContent>
+          </Card>
+
         ))}
-      </Grid>
+
+      </Box>
 
 
 

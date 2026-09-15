@@ -32,8 +32,8 @@ export function showConfirmation({ title, message, confirmText = "Confirm", canc
         <DialogTitle>{title}</DialogTitle>
         <DialogContent
           sx={{
-            minWidth: 100,
-            minHeight: 80,
+            minWidth: 80,
+            minHeight: 60,
           }}
         >
           <Typography>{message}</Typography>

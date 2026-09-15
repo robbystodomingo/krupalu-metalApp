@@ -2,7 +2,7 @@ import './App.css';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import SellerDashboard from './pages/SellerDashboard';
@@ -21,30 +21,58 @@ import Navbar from './component/Navbar';
 import Sidenav from './component/Sidenav';
 import Layout from "./utils/Layout";
 
-import { BrowserRouter,Routes,Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import SellersList from './pages/SellersList';
 import AdvertisersList from './pages/AdvertisersList';
 import BuyersList from './pages/BuyersList';
 import AdminBuyersList from './pages/AdminBuyersList'
-import AdminSellersList from './pages/AdminSellersList' 
+import AdminSellersList from './pages/AdminSellersList'
 import AdminAdvertisersList from './pages/AdminAdvertisersList'
 
 import ProtectedRoute from "./component/ProtectedRoute";
+
+import axios from "axios";
 
 function App() {
 
   const [role, setRole] = useState(() => localStorage.getItem("role"));
 
+  useEffect(() => {
+    async function fetchCurrentUser() {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await axios.get("/api/v1/user/me", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        localStorage.setItem("userId", response.data.id);
+        localStorage.setItem("email", response.data.email);
+
+        if (response.data.roles?.length > 0) {
+          localStorage.setItem("role", response.data.roles[0]);
+          setRole(response.data.roles[0]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch current user:", err);
+      }
+    }
+
+    fetchCurrentUser();
+  }, []);
+
+
 
   return (
     <BrowserRouter>
       <ShowNavBar>
-        <Navbar/>
+        <Navbar />
         {/* <Sidenav /> */}
       </ShowNavBar>
       <Layout role={role} setRole={setRole}>
         <Routes>
-           {/* Public routes */}
+          {/* Public routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage setRole={setRole} />} />
           <Route path="/register" element={<RegistrationPage />} />
@@ -68,7 +96,7 @@ function App() {
           <Route path="/seller/buyersList" element={<ProtectedRoute><BuyersList /></ProtectedRoute>} />
           <Route path="/seller/advertisersList" element={<ProtectedRoute><AdvertisersList /></ProtectedRoute>} />
         </Routes>
-        </Layout>
+      </Layout>
     </BrowserRouter>
   );
 }

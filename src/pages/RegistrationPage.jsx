@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import {
   TextField,
@@ -22,6 +22,8 @@ const steps = ["Account Setup", "Role Details"];
 
 const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
+let emailCheckTimeout; // ✅ declare outside component to persist between renders
+
 export default function RegistrationPage() {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -37,17 +39,49 @@ export default function RegistrationPage() {
 
   const navigate = useNavigate();
 
+  const checkEmailExists = async (email) => {
+    try {
+      const response = await fetch(`/api/v1/auth/check-email?email=${encodeURIComponent(email)}`);
+      if (!response.ok) throw new Error("Failed to check email");
+      return await response.json(); // backend returns true/false
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
   const handleEmailChange = (e) => {
     const value = e.target.value;
     setEmail(value);
+
     if (!value) {
       setEmailError("Email is required");
+      return;
     } else if (!isValidEmail(value)) {
       setEmailError("Please enter a valid email address");
-    } else {
-      setEmailError("");
+      return;
     }
+
+    if (emailCheckTimeout) clearTimeout(emailCheckTimeout);
+
+    emailCheckTimeout = setTimeout(async () => {
+      const exists = await checkEmailExists(value);
+      if (exists) {
+        setEmailError("This email is already registered");
+      } else {
+        setEmailError("");
+      }
+    }, 500);
   };
+
+  // ✅ Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (emailCheckTimeout) {
+        clearTimeout(emailCheckTimeout);
+      }
+    };
+  }, []);
 
   const showError = (message) => {
     setErrorMessage(message);
@@ -60,6 +94,12 @@ export default function RegistrationPage() {
     if (!isValidEmail(email)) {
       setEmailError("Please enter a valid email address");
       showError("Invalid email format. Please enter a valid email.");
+      return;
+    }
+
+    const exists = await checkEmailExists(email);
+    if (exists) {
+      showError("This email is already registered. Please use another one.");
       return;
     }
 
@@ -106,7 +146,7 @@ export default function RegistrationPage() {
         }}
       >
         <Stepper activeStep={0} alternativeLabel>
-          {steps.map((label, index) => (
+          {steps.map((label) => (
             <Step key={label}>
               <StepLabel sx={{ cursor: "pointer" }}>{label}</StepLabel>
             </Step>
@@ -136,10 +176,7 @@ export default function RegistrationPage() {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  edge="end"
-                >
+                <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end">
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
@@ -156,10 +193,7 @@ export default function RegistrationPage() {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowConfirmPassword((prev) => !prev)}
-                  edge="end"
-                >
+                <IconButton onClick={() => setShowConfirmPassword((prev) => !prev)} edge="end">
                   {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>

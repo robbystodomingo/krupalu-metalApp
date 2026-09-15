@@ -20,46 +20,57 @@ function LoginPage({ setRole }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [openErrorModal, setOpenErrorModal] = useState(false);
   const [errorType, setErrorType] = useState("");
+
   const navigate = useNavigate();
 
   async function login(event) {
     event.preventDefault();
     setErrorMessage("");
     setErrorType("");
-    try {
-      const response = await axios.post("api/v1/auth/signin", {
-        email,
-        password,
-      }, {
-        headers: { "Content-Type": "application/json" }
-      });
 
-      const { token, role } = response.data;
+    try {
+      const response = await axios.post(
+        "/api/v1/auth/signin",
+        { email, password },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      const { token, role, message, id, fullName, email: userEmail } = response.data;
+
+      if (!token) {
+        setErrorMessage(message || "Login failed");
+        setErrorType(
+          message?.toLowerCase().includes("pending") ? "pending" :
+          message?.toLowerCase().includes("rejected") ? "rejected" :
+          message?.toLowerCase().includes("invalid") ? "invalid" : "other"
+        );
+        setOpenErrorModal(true);
+        return;
+      }
+
       localStorage.setItem("token", token);
       localStorage.setItem("role", role.toUpperCase());
+      localStorage.setItem("userId", id);
+      localStorage.setItem("fullName", fullName || "");
+      localStorage.setItem("email", userEmail || "");
       setRole(role.toUpperCase());
 
+      // Navigate based on role
       if (role === "ADMIN") navigate("/admin");
       else if (role === "SELLER") navigate("/seller");
       else if (role === "BUYER") navigate("/buyer");
       else if (role === "ADVERTISER") navigate("/advertiser");
       else navigate("/home");
+
     } catch (err) {
       console.error(err);
-
       let message = "Login failed";
       let type = "other";
-
       if (err.response && err.response.data) {
         message = err.response.data.message || "Login failed";
-
-        if (message.toLowerCase().includes("pending")) {
-          type = "pending";
-        } else if (message.toLowerCase().includes("rejected")) {
-          type = "rejected";
-        }
+        if (message.toLowerCase().includes("pending")) type = "pending";
+        else if (message.toLowerCase().includes("rejected") || message.toLowerCase().includes("denied")) type = "rejected";
       }
-
       setErrorMessage(message);
       setErrorType(type);
       setOpenErrorModal(true);
@@ -136,15 +147,23 @@ function LoginPage({ setRole }) {
         </Typography>
       </Paper>
 
+      {/* Error Modal */}
       <Dialog open={openErrorModal} onClose={() => setOpenErrorModal(false)}>
         <DialogTitle>
           {errorType === "pending" && "Account Pending Approval"}
           {errorType === "rejected" && "Account Rejected"}
+          {errorType === "invalid" && "Invalid Credentials"}
           {errorType === "other" && "Login Error"}
         </DialogTitle>
         <DialogContent>
           <Typography>
-            {errorMessage}
+            {errorType === "pending" &&
+              "Your account is still under review by our Administrators. You'll be notified once it's approved."}
+            {errorType === "rejected" &&
+              "Your account registration was not approved. Please contact support if you believe this is a mistake."}
+            {errorType === "invalid" &&
+              "The email or password you entered is incorrect. Please try again."}
+            {errorType === "other" && errorMessage}
           </Typography>
         </DialogContent>
         <DialogActions>

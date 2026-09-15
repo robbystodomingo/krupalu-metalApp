@@ -7,9 +7,6 @@ import {
   Box,
   Container,
   Grid,
-  Card,
-  CardContent,
-  CardMedia,
 } from "@mui/material";
 
 import { ComposableMap, Geographies, Geography, Marker, Line, ZoomableGroup } from "react-simple-maps";
@@ -231,8 +228,8 @@ const HomePage = () => {
     graphite: "#5b6168",
     panel: "#2E3338",
     steel: "#EEF0F2",
-    accent: "#E8672B",
-    accentDim: "#c9531f",
+    accent: "#D4AF37",
+    accentDim: "#a19f05",
     blue: "#4A6FA5",
     text: "#15181B",
   };
@@ -322,14 +319,11 @@ const HomePage = () => {
               backgroundSize: "cover",
               backgroundPosition: "center",
               opacity: i === heroIndex ? 1 : 0,
-              transition: "opacity 1.8s ease-in-out",
-              animation: i === heroIndex ? "kenburns 6s ease-in-out forwards" : "none",
-              "@keyframes kenburns": {
-                "0%": { transform: "scale(1)" },
-                "100%": { transform: "scale(1.06)" },
-              },
+              transition: "opacity 1.8s ease-in-out, transform 6s ease-in-out",
+              transform: i === heroIndex ? "scale(1.06)" : "scale(1)",
             }}
           />
+
         ))}
 
         {/* Overlay for legibility */}
@@ -377,40 +371,6 @@ const HomePage = () => {
             Krupalu Metal Inc. connects buyers, sellers, and advertisers across
             ferrous and non-ferrous alloys — from raw coil to finished pipe.
           </Typography>
-
-          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-            <Button
-              variant="contained"
-              size="large"
-              sx={{
-                bgcolor: COLORS.accent,
-                fontFamily: fontBody,
-                fontWeight: 600,
-                textTransform: "none",
-                px: 3.5,
-                py: 1.3,
-                "&:hover": { bgcolor: COLORS.accentDim },
-              }}
-            >
-              I'm a buyer — find quality metals
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              sx={{
-                borderColor: "rgba(255,255,255,0.6)",
-                color: "#fff",
-                fontFamily: fontBody,
-                fontWeight: 600,
-                textTransform: "none",
-                px: 3.5,
-                py: 1.3,
-                "&:hover": { borderColor: "#fff", bgcolor: "rgba(255,255,255,0.08)" },
-              }}
-            >
-              I'm a seller — list your metals
-            </Button>
-          </Box>
         </Container>
       </Box>
 
@@ -479,7 +439,6 @@ const HomePage = () => {
       {/* Who we are */}
       <Container sx={{
         py: { xs: 8, md: 12 }, textAlign: "center", backgroundImage: "url('/attachments/zEvjo6PCePC7EguBPxzKn.jpeg')",
-        backgroundImage: "url('/attachments/zEvjo6PCePC7EguBPxzKn.jpeg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         color: "gray", // make text readable
