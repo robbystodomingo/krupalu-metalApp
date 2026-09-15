@@ -44,7 +44,7 @@ public class ProductPostServiceImpl implements ProductPostService {
         ProductCategory category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        User user = userRepository.findById(Long.valueOf(userId))
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         log.info(String.valueOf(user));
 

@@ -42,6 +42,10 @@ public class User implements UserDetails {
 
     private String password;
 
+    private boolean trialUsed;
+
+    private String stripeSubscriptionId;
+
     @Enumerated(EnumType.STRING)
     private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
 

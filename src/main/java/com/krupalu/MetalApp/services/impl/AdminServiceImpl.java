@@ -31,7 +31,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public User updateBuyerApproval(String userId, ApprovalStatus status) {
-        User buyer = userRepository.findById(Long.valueOf(userId))
+        User buyer = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Buyer not found"));
         buyer.setApprovalStatus(status);
         return userRepository.save(buyer);

@@ -1,17 +1,25 @@
 package com.krupalu.MetalApp.util;
 
 import com.krupalu.MetalApp.enums.Role;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 @RequiredArgsConstructor
+@Getter
 public class MyUserDetails implements UserDetails {
 
     private final String id;
     private final String username;
     private final String password;
+
+    private final String fullName;
+
+    private final String country;
+
+    private final String phoneNumber;
 
     private final Role role;
     private final Collection<? extends GrantedAuthority> authorities;

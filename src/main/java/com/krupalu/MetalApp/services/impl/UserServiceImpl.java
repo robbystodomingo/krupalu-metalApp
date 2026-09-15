@@ -1,5 +1,6 @@
 package com.krupalu.MetalApp.services.impl;
 
+import com.krupalu.MetalApp.dto.UserUpdateRequest;
 import com.krupalu.MetalApp.entity.User;
 import com.krupalu.MetalApp.enums.Role;
 import com.krupalu.MetalApp.repo.UserRepository;
@@ -8,6 +9,7 @@ import com.krupalu.MetalApp.util.MyUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -19,10 +21,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    /**
-     * Expose a UserDetailsService that Spring Security can use.
-     * This version loads users by email (since your signin request uses email).
-     */
+    private final PasswordEncoder passwordEncoder;
+
     @Override
     public UserDetailsService userDetailsService() {
         return email -> {
@@ -33,9 +33,13 @@ public class UserServiceImpl implements UserService {
                     user.getId(),
                     user.getEmail(),
                     user.getPassword(),
+                    user.getFullName(),
+                    user.getCountry(),
+                    user.getPhoneNumber(),
                     user.getRole(),
                     Collections.emptyList()
             );
+
         };
     }
 
@@ -53,5 +57,23 @@ public class UserServiceImpl implements UserService {
 
     public List<User> getBuyers() {
         return getUsersByRole(Role.BUYER);
+    }
+
+    @Override
+    public boolean userExists(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public User updateUser(String userId, UserUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (request.getFullName() != null) user.setFullName(request.getFullName());
+        if (request.getEmail() != null) user.setEmail(request.getEmail());
+        if (request.getPhoneNumber() != null) user.setPhoneNumber(request.getPhoneNumber());
+        if (request.getCountry() != null) user.setCountry(request.getCountry());
+
+        return userRepository.save(user);
     }
 }

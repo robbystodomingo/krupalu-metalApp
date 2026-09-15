@@ -10,6 +10,7 @@ import com.krupalu.MetalApp.enums.Role;
 import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.AuthenticationService;
 import com.krupalu.MetalApp.services.JWTService;
+import com.krupalu.MetalApp.services.UserService;
 import com.krupalu.MetalApp.token.Token;
 import com.krupalu.MetalApp.token.TokenRepository;
 import com.krupalu.MetalApp.token.TokenType;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,9 +39,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final TokenRepository tokenRepository;
 
+    private final UserService userService;
+
 
     public JWTAuthenticationResponse registration(RegistrationRequest registrationRequest) {
-        // Build user entity
+
+        if (userService.userExists(registrationRequest.getEmail())) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
+
         var user = User.builder()
                 .fullName(registrationRequest.getFullName())
                 .email(registrationRequest.getEmail())
@@ -88,12 +96,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 signInRequest.getPassword()));
 
         var user = userRepository.findByEmail(signInRequest.getEmail()).orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
-        if (user.getRole() == Role.BUYER) {
-            if (user.getApprovalStatus() == ApprovalStatus.PENDING) {
-                throw new IllegalStateException("Your account is pending admin approval.");
+        if (user.getRole().equals(Role.BUYER)) {
+            if (user.getApprovalStatus().equals(ApprovalStatus.PENDING)) {
+                return JWTAuthenticationResponse.builder()
+                        .email(user.getEmail())
+                        .fullName(user.getFullName())
+                        .role(user.getRole().name())
+                        .message("Your account is pending admin approval.")
+                        .build();
             }
-            if (user.getApprovalStatus() == ApprovalStatus.REJECTED) {
-                throw new IllegalStateException("Your registration was rejected by admin.");
+            if (user.getApprovalStatus().equals(ApprovalStatus.REJECTED)) {
+                return JWTAuthenticationResponse.builder()
+                        .email(user.getEmail())
+                        .fullName(user.getFullName())
+                        .role(user.getRole().name())
+                        .message("Your registration was rejected by admin.")
+                        .build();
             }
         }
         var jwt = jwtService.generateToken(user);
@@ -101,17 +119,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         revokeAllUserTokens(user);
         saveUserToken(user, jwt);
 
-        ResponseEntity.ok().header(
-                        HttpHeaders.AUTHORIZATION,
-                        jwtService.generateToken(user)
-                )
-                .body(user);
         return JWTAuthenticationResponse.builder()
                 .token(jwt)
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .id(user.getId())
                 .build();
     }
 

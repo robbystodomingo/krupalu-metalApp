@@ -43,7 +43,7 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
     public AdvertisementPost createAdvertisement(String userId, String advertisementName,
                                                  String description, List<MultipartFile> photos)
                                                  throws IOException {
-        User user = userRepository.findById(Long.valueOf(userId))
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         log.info(String.valueOf(user));
 

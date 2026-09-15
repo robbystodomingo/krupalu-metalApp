@@ -67,4 +67,13 @@ public class EmailServiceImpl implements EmailService {
         mailSender.send(message);
     }
 
+    @Override
+    public void sendTrialReminder(String email) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Your trial is ending soon");
+        message.setText("Hi,\n\nYour trial will end in 7 days. After that, your subscription will continue automatically.\n\nIf you’d like to make changes, please visit your account settings.\n\nThanks,\nKrupalu Metal Inc.");
+        mailSender.send(message);
+    }
+
 }

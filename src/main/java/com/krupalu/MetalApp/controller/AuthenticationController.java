@@ -9,6 +9,7 @@ import com.krupalu.MetalApp.dto.RegistrationRequest;
 import com.krupalu.MetalApp.entity.User;
 import com.krupalu.MetalApp.services.AuthenticationService;
 import com.krupalu.MetalApp.services.JWTService;
+import com.krupalu.MetalApp.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -30,6 +31,8 @@ public class AuthenticationController {
     private final JWTService jwtService;
 
     private final LogoutService logoutService;
+
+    private final UserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<JWTAuthenticationResponse> registration(@Valid @RequestBody RegistrationRequest registrationRequest){
@@ -57,5 +60,11 @@ public class AuthenticationController {
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         logoutService.logout(request, response, authentication);
         return ResponseEntity.ok("You have been logged out successfully.");
+    }
+
+    @GetMapping("/check-email")
+    public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
+        boolean exists = userService.userExists(email);
+        return ResponseEntity.ok(exists);
     }
 }
