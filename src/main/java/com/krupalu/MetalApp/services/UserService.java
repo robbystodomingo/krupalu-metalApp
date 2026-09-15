@@ -19,4 +19,6 @@ public interface UserService {
     public boolean userExists(String email);
 
     User updateUser(String userId, UserUpdateRequest request);
+
+    void changePassword(String userId, String oldPassword, String newPassword);
 }

@@ -1,5 +1,7 @@
 package com.krupalu.MetalApp.services.impl;
 
+import com.krupalu.MetalApp.dto.AdvertisementPostRequest;
+import com.krupalu.MetalApp.dto.ProductPostRequest;
 import com.krupalu.MetalApp.entity.AdvertisementPost;
 import com.krupalu.MetalApp.entity.ProductPost;
 import com.krupalu.MetalApp.entity.User;
@@ -38,21 +40,11 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public List<ProductPost> getPendingProducts() {
-        return productPostRepository.findByApprovalStatus(ApprovalStatus.PENDING);
-    }
-
-    @Override
     public ProductPost updateProductApproval(Long productId, ApprovalStatus status) {
         ProductPost product = productPostRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         product.setApprovalStatus(status);
         return productPostRepository.save(product);
-    }
-
-    @Override
-    public List<AdvertisementPost> getPendingAdvertisements() {
-        return advertisementPostRepository.findByApprovalStatus(ApprovalStatus.PENDING);
     }
 
     @Override
@@ -91,5 +83,49 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public AdvertisementPost rejectAdvertisement(Long adId) {
         return updateAdvertisementApproval(adId, ApprovalStatus.REJECTED);
+    }
+
+    @Override
+    public List<ProductPostRequest> getPendingProducts() {
+        List<ProductPost> posts = productPostRepository.findByApprovalStatus(ApprovalStatus.PENDING);
+
+        return posts.stream()
+                .map(p -> {
+                    User seller = p.getUser();
+                    return ProductPostRequest.builder()
+                            .id(p.getId())
+                            .productName(p.getProductName())
+                            .description(p.getDescription())
+                            .approvalStatus(p.getApprovalStatus())
+                            .photoUrls(p.getPhotoUrls())
+                            .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
+                            .sellerName(seller != null ? seller.getFullName() : null)
+                            .sellerEmail(seller != null ? seller.getEmail() : null)
+                            .sellerPhoneNumber(seller != null ? seller.getPhoneNumber() : null)
+                            .userId(seller != null ? seller.getId() : null)
+                            .build();
+                })
+                .toList();
+    }
+    @Override
+    public List<AdvertisementPostRequest> getPendingAdvertisements() {
+        List<AdvertisementPost> posts = advertisementPostRepository.findByApprovalStatus(ApprovalStatus.PENDING);
+
+        return posts.stream()
+                .map(a -> {
+                    User advertiser = a.getUser();
+                    return AdvertisementPostRequest.builder()
+                            .id(a.getId())
+                            .advertisementName(a.getAdvertisementName())
+                            .description(a.getDescription())
+                            .approvalStatus(a.getApprovalStatus())
+                            .photoUrls(a.getPhotoUrls())
+                            .advertiserName(advertiser != null ? advertiser.getFullName() : null)
+                            .advertiserEmail(advertiser != null ? advertiser.getEmail() : null)
+                            .advertiserPhoneNumber(advertiser != null ? advertiser.getPhoneNumber() : null)
+                            .userId(advertiser != null ? advertiser.getId() : null)
+                            .build();
+                })
+                .toList();
     }
 }

@@ -85,15 +85,24 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         MyUserDetails userDetails = (MyUserDetails) auth.getPrincipal();
         String userId = userDetails.getId();
+
         return advertisementPostRepository.findByUserId(userId).stream()
-                .map(post -> new AdvertisementPostRequest(
-                        post.getId(),
-                        post.getAdvertisementName(),
-                        post.getDescription(),
-                        post.getPhotoUrls().stream()
-                                .map(this::rewritePath)
-                                .toList()
-                ))
+                .map(post -> {
+                    User advertiser = post.getUser();
+                    return AdvertisementPostRequest.builder()
+                            .id(post.getId())
+                            .advertisementName(post.getAdvertisementName())
+                            .description(post.getDescription())
+                            .approvalStatus(post.getApprovalStatus())
+                            .photoUrls(post.getPhotoUrls().stream()
+                                    .map(this::rewritePath)
+                                    .toList())
+                            .advertiserName(advertiser != null ? advertiser.getFullName() : null)
+                            .advertiserEmail(advertiser != null ? advertiser.getEmail() : null)
+                            .advertiserPhoneNumber(advertiser != null ? advertiser.getPhoneNumber() : null)
+                            .userId(advertiser != null ? advertiser.getId() : null)
+                            .build();
+                })
                 .toList();
     }
 
@@ -107,15 +116,19 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
             throw new RuntimeException("Unauthorized access to post");
         }
 
-        return new AdvertisementPostRequest(
-                post.getId(),
-                post.getAdvertisementName(),
-                post.getDescription(),
-                post.getPhotoUrls().stream()
-                        .map(this::rewritePath)
-                        .toList()
+        User advertiser = post.getUser();
 
-        );
+        return AdvertisementPostRequest.builder()
+                .id(post.getId())
+                .advertisementName(post.getAdvertisementName())
+                .description(post.getDescription())
+                .approvalStatus(post.getApprovalStatus())
+                .photoUrls(post.getPhotoUrls())
+                .advertiserName(advertiser != null ? advertiser.getFullName() : null)
+                .advertiserEmail(advertiser != null ? advertiser.getEmail() : null)
+                .advertiserPhoneNumber(advertiser != null ? advertiser.getPhoneNumber() : null)
+                .userId(advertiser != null ? advertiser.getId() : null)
+                .build();
     }
 
     @Override

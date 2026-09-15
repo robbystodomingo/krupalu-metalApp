@@ -1,5 +1,7 @@
 package com.krupalu.MetalApp.controller;
 
+import com.krupalu.MetalApp.dto.AdvertisementPostRequest;
+import com.krupalu.MetalApp.dto.ProductPostRequest;
 import com.krupalu.MetalApp.entity.AdvertisementPost;
 import com.krupalu.MetalApp.entity.ProductPost;
 import com.krupalu.MetalApp.entity.User;
@@ -46,7 +48,7 @@ public class AdminController {
 
     // --- Products ---
     @GetMapping("/products/pending")
-    public ResponseEntity<List<ProductPost>> getPendingProducts() {
+    public ResponseEntity<List<ProductPostRequest>> getPendingProducts() {
         return ResponseEntity.ok(adminService.getPendingProducts());
     }
 
@@ -62,7 +64,7 @@ public class AdminController {
 
     // --- Advertisements ---
     @GetMapping("/ads/pending")
-    public ResponseEntity<List<AdvertisementPost>> getPendingAdvertisements() {
+    public ResponseEntity<List<AdvertisementPostRequest>> getPendingAdvertisements() {
         return ResponseEntity.ok(adminService.getPendingAdvertisements());
     }
 

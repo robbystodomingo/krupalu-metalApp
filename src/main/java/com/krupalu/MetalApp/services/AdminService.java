@@ -1,5 +1,7 @@
 package com.krupalu.MetalApp.services;
 
+import com.krupalu.MetalApp.dto.AdvertisementPostRequest;
+import com.krupalu.MetalApp.dto.ProductPostRequest;
 import com.krupalu.MetalApp.entity.AdvertisementPost;
 import com.krupalu.MetalApp.entity.ProductPost;
 import com.krupalu.MetalApp.entity.User;
@@ -13,11 +15,11 @@ public interface AdminService {
 
     public User updateBuyerApproval(String userId, ApprovalStatus status);
 
-    public List<ProductPost> getPendingProducts();
+    public List<ProductPostRequest> getPendingProducts();
 
     public ProductPost updateProductApproval(Long productId, ApprovalStatus status);
 
-    public List<AdvertisementPost> getPendingAdvertisements();
+    public List<AdvertisementPostRequest> getPendingAdvertisements();
 
     public AdvertisementPost updateAdvertisementApproval(Long adId, ApprovalStatus status);
 

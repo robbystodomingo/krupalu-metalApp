@@ -1,6 +1,7 @@
 package com.krupalu.MetalApp.controller;
 
 
+import com.krupalu.MetalApp.dto.ChangePasswordRequest;
 import com.krupalu.MetalApp.dto.UserUpdateRequest;
 import com.krupalu.MetalApp.entity.User;
 import com.krupalu.MetalApp.enums.Role;
@@ -49,6 +50,18 @@ public class UserController {
                                            @RequestBody UserUpdateRequest request) {
         User updated = userService.updateUser(userId, request);
         return ResponseEntity.ok(updated);
+    }
+
+    @PutMapping("/changePassword/{id}")
+    public ResponseEntity<?> changePassword(
+            @PathVariable String id,
+            @RequestBody ChangePasswordRequest request) {
+        try {
+            userService.changePassword(id, request.getOldPassword(), request.getNewPassword());
+            return ResponseEntity.ok("Password changed successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 

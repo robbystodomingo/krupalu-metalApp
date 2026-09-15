@@ -102,15 +102,21 @@ public class ProductPostServiceImpl implements ProductPostService {
         }
 
         return posts.stream()
-                .map(post -> new ProductPostRequest(
-                        post.getId(),
-                        post.getProductName(),
-                        post.getDescription(),
-                        post.getPhotoUrls().stream()
-                                .map(this::rewritePath)
-                                .toList(),
-                        post.getCategory() != null ? post.getCategory().getCategoryName() : null
-                ))
+                .map(p -> {
+                    User seller = p.getUser();
+                    return ProductPostRequest.builder()
+                            .id(p.getId())
+                            .productName(p.getProductName())
+                            .description(p.getDescription())
+                            .approvalStatus(p.getApprovalStatus())
+                            .photoUrls(p.getPhotoUrls())
+                            .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
+                            .sellerName(seller != null ? seller.getFullName() : null)
+                            .sellerEmail(seller != null ? seller.getEmail() : null)
+                            .sellerPhoneNumber(seller != null ? seller.getPhoneNumber() : null)
+                            .userId(seller != null ? seller.getId() : null)
+                            .build();
+                })
                 .toList();
     }
 
@@ -120,19 +126,26 @@ public class ProductPostServiceImpl implements ProductPostService {
         ProductPost post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        if (!post.getUser().getId().equals(userId)) {
+        if (!post.getUser().getId().toString().equals(userId)) {
             throw new RuntimeException("Unauthorized access to post");
         }
 
-        return new ProductPostRequest(
-                post.getId(),
-                post.getProductName(),
-                post.getDescription(),
-                post.getPhotoUrls().stream()
+        User seller = post.getUser();
+
+        return ProductPostRequest.builder()
+                .id(post.getId())
+                .productName(post.getProductName())
+                .description(post.getDescription())
+                .approvalStatus(post.getApprovalStatus())
+                .photoUrls(post.getPhotoUrls().stream()
                         .map(this::rewritePath)
-                        .toList(),
-                post.getCategory() != null ? post.getCategory().getCategoryName() : null
-        );
+                        .toList())
+                .categoryName(post.getCategory() != null ? post.getCategory().getCategoryName() : null)
+                .sellerName(seller != null ? seller.getFullName() : null)
+                .sellerEmail(seller != null ? seller.getEmail() : null)
+                .sellerPhoneNumber(seller != null ? seller.getPhoneNumber() : null)
+                .userId(seller != null ? String.valueOf(seller.getId()) : null) // or .userId(seller.getId()) if you switch the DTO field to Long
+                .build();
     }
 
 
