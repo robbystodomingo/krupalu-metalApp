@@ -16,7 +16,14 @@ import Typography from '@mui/material/Typography';
 
 import { showConfirmation } from '../utils/ConfirmationModal';
 import Sidenav from '../component/Sidenav';
-import ProfileModal from '../modals/ProfileModal'; // 👈 use this
+import ProfileModal from '../modals/ProfileModal';
+import ChangePasswordModal from '../modals/ChangePasswordModal';
+
+
+import EditIcon from '@mui/icons-material/Edit';
+import LockIcon from '@mui/icons-material/Lock';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+
 
 const drawerWidth = 0;
 
@@ -24,8 +31,16 @@ const Navbar = ({ role, open, toggleDrawer }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   const username = localStorage.getItem('fullName');
+
+
+
+  const handleChangePassword = () => {
+    handleMenuClose();
+    setPasswordOpen(true);
+  };
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
@@ -64,7 +79,7 @@ const Navbar = ({ role, open, toggleDrawer }) => {
 
   const handleChangeProfile = () => {
     handleMenuClose();
-    setProfileOpen(true); // 👈 just open modal
+    setProfileOpen(true);
   };
 
   const dropdownRoles = ['BUYER', 'SELLER', 'ADVERTISER'];
@@ -87,15 +102,23 @@ const Navbar = ({ role, open, toggleDrawer }) => {
           {dropdownRoles.includes(role) ? (
             <>
               <Typography variant="body1" sx={{ ml: 'auto', mr: 2 }}>
-                Hi, {username || 'User'}
+                Hi, {username || 'User'}!
               </Typography>
               <IconButton size="large" edge="end" color="inherit" onClick={handleMenuOpen}>
                 <AccountCircle />
               </IconButton>
               <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                <MenuItem onClick={handleChangeProfile}>Change Profile</MenuItem>
-                <MenuItem onClick={logout}>Logout</MenuItem>
+                <MenuItem onClick={handleChangeProfile}>
+                  <EditIcon fontSize="small" sx={{ mr: 1 }} /> Change Profile
+                </MenuItem>
+                <MenuItem onClick={handleChangePassword}>
+                  <LockIcon fontSize="small" sx={{ mr: 1 }} /> Change Password
+                </MenuItem>
+                <MenuItem onClick={logout}>
+                  <ExitToAppIcon fontSize="small" sx={{ mr: 1 }} /> Logout
+                </MenuItem>
               </Menu>
+
             </>
           ) : (
             <Button sx={{ ml: 'auto' }} color="inherit" onClick={logout}>
@@ -124,6 +147,10 @@ const Navbar = ({ role, open, toggleDrawer }) => {
 
       {/* Profile Modal */}
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
+
+      { /* Change Password Modal */}
+
+      <ChangePasswordModal open={passwordOpen} onClose={() => setPasswordOpen(false)} />
     </Box>
   );
 };

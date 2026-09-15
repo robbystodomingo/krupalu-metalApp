@@ -84,6 +84,9 @@ export default function AdminDashboard() {
       setAds(
         adsRes.data.map((a) => ({
           id: a.id,
+          advertiser: a.advertiserName || "Unknown",
+          advertiserEmail: a.advertiserEmail || "",
+          advertiserPhoneNumber: a.advertiserPhoneNumber || "",
           advertisementName: a.advertisementName,
           description: a.description,
           approvalStatus: a.approvalStatus,
@@ -94,8 +97,11 @@ export default function AdminDashboard() {
       setProducts(
         productsRes.data.map((p) => ({
           id: p.id,
+          sellerName: p.sellerName || "Unknown",
+          sellerEmail: p.sellerEmail || "",
+          sellerPhoneNumber: p.sellerPhoneNumber || "",
           productName: p.productName,
-          categoryName: p.category ? p.category.categoryName : "",
+          categoryName: p.categoryName,
           description: p.description,
           approvalStatus: p.approvalStatus,
           photoUrls: p.photoUrls || [],
@@ -294,12 +300,17 @@ export default function AdminDashboard() {
   };
 
   const adColumns = {
-    advertisementName: "Advertisement Name",
+    advertiser: "Advertisement Company",
+    advertiserEmail: "Advertiser's Email",
+    advertiserPhoneNumber: "Phone Number",
     description: "Description",
     approvalStatus: "Approval Status",
   };
 
   const productColumns = {
+    sellerName: "Seller's Name",
+    sellerEmail: "Seller's Email",
+    sellerPhoneNumber: "Phone Number",
     productName: "Product Name",
     categoryName: "Category",
     description: "Description",
