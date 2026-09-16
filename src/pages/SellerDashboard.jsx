@@ -13,11 +13,23 @@ import {
   FormControl,
   InputLabel,
   Divider,
+  Chip,
 } from "@mui/material";
 import axios from "axios";
 import PostDetailModal from "../modals/PostDetailModal";
 import ProductModal from "../modals/ProductModal";
 import { showConfirmation } from "../utils/ConfirmationModal";
+
+const STATUS_CHIP_PROPS = {
+  PENDING: { label: "Pending Review", color: "warning" },
+  APPROVED: { label: "Approved", color: "success" },
+  REJECTED: { label: "Rejected", color: "error" },
+};
+
+function StatusChip({ status }) {
+  const props = STATUS_CHIP_PROPS[status] || { label: status || "Unknown", color: "default" };
+  return <Chip size="small" label={props.label} color={props.color} sx={{ fontWeight: 600 }} />;
+}
 
 export default function SellerDashboard() {
   const [posts, setPosts] = useState([]);
@@ -31,7 +43,6 @@ export default function SellerDashboard() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-
 
   const fetchPosts = async () => {
     try {
@@ -62,7 +73,6 @@ export default function SellerDashboard() {
       console.error("Error fetching posts:", err);
     }
   };
-
 
   useEffect(() => {
     fetchPosts();
@@ -126,7 +136,7 @@ export default function SellerDashboard() {
             sx={{
               cursor: "pointer",
               width: "100%",
-              aspectRatio: "5 / 8", // back to uniform card height
+              aspectRatio: "5 / 8",
               display: "flex",
               flexDirection: "column",
               transition: "transform 0.3s ease, box-shadow 0.3s ease",
@@ -144,7 +154,7 @@ export default function SellerDashboard() {
                 firstImage && (
                   <CardMedia
                     component="img"
-                    sx={{ height: "58%", objectFit: "cover" }} // bigger image footprint, was 45%
+                    sx={{ height: "58%", objectFit: "cover" }}
                     image={firstImage}
                     alt={post.productName}
                   />
@@ -152,7 +162,14 @@ export default function SellerDashboard() {
               );
             })()}
 
-            <CardContent sx={{ flexGrow: 1, overflow: "hidden" }}>
+            <CardContent
+              sx={{
+                flexGrow: 1,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <Typography variant="h6" noWrap>
                 {post.productName}
               </Typography>
@@ -164,7 +181,7 @@ export default function SellerDashboard() {
                 mt={1}
                 sx={{
                   display: "-webkit-box",
-                  WebkitLineClamp: 2, // trimmed from 3 to 2, since there's less vertical room left for text now
+                  WebkitLineClamp: 2,
                   WebkitBoxOrient: "vertical",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -173,6 +190,10 @@ export default function SellerDashboard() {
               >
                 {post.description}
               </Typography>
+
+              <Box sx={{ mt: "auto", pt: 1 }}>
+                <StatusChip status={post.approvalStatus} />
+              </Box>
             </CardContent>
           </Card>
         ))}
@@ -193,25 +214,17 @@ export default function SellerDashboard() {
         open={createOpen}
         handleClose={() => setCreateOpen(false)}
         mode="create"
-        onSuccess={(newPost) => {
-          const postWithStatus = { ...newPost, approvalStatus: "PENDING" };
-
-          axios.post("/api/v1/sellerDashboard/posts/create", postWithStatus, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          })
-            .then(() => {
-              showConfirmation({
-                title: "Product for review",
-                message: "Your product has been submitted for approval.",
-                confirmText: "OK",
-              }).then(() => {
-                fetchPosts();
-              });
-            })
-            .catch((err) => console.error("Error creating post:", err));
+        onSuccess={() => {
+          setCreateOpen(false);
+          showConfirmation({
+            title: "Product for review",
+            message: "Your product has been submitted for approval.",
+            confirmText: "OK",
+          }).then(() => {
+            fetchPosts();
+          });
         }}
       />
-
 
       <ProductModal
         open={editOpen}
@@ -219,6 +232,7 @@ export default function SellerDashboard() {
         product={selectedProduct}
         mode="edit"
         onSuccess={() => {
+          setEditOpen(false);
           showConfirmation({
             title: "Product Updated",
             message: "Your product has been successfully updated.",

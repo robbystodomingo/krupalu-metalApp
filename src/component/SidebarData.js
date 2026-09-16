@@ -28,6 +28,12 @@ export const SidebarData = [
     roles: ["ADMIN"], // only admin
   },
   {
+    title: "Dashboard",
+    path: "/buyer",
+    icon: "🏠",
+    roles: ["BUYER"], // only buyer
+  },
+  {
     title: "Sellers",
     path: "/buyer/sellersList",
     icon: "🏪",

@@ -8,6 +8,8 @@ import {
   Container,
   Grid,
 } from "@mui/material";
+import axios from "axios";
+import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 
 import { ComposableMap, Geographies, Geography, Marker, Line, ZoomableGroup } from "react-simple-maps";
 
@@ -198,6 +200,96 @@ function WorldReachMap({ COLORS, fontBody, fontDisplay }) {
   );
 }
 
+function VisitorCounter({ COLORS, fontBody, fontDisplay }) {
+  const [count, setCount] = useState(null);
+  const [displayCount, setDisplayCount] = useState(0);
+  const hasIncremented = React.useRef(false);
+
+  useEffect(() => {
+    if (hasIncremented.current) return;
+    hasIncremented.current = true;
+
+    axios
+      .post("/api/v1/visitors/increment")
+      .then((res) => setCount(res.data.count))
+      .catch((err) => console.error("Error fetching visitor count:", err));
+  }, []);
+
+  // Animate the number counting up to its target once it arrives.
+  useEffect(() => {
+    if (count === null) return;
+
+    const duration = 900; // ms
+    const start = performance.now();
+
+    const step = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      setDisplayCount(Math.round(eased * count));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+
+    requestAnimationFrame(step);
+  }, [count]);
+
+  return (
+    <Box sx={{ bgcolor: "transparent", py: { xs: 4, md: 5 } }}>
+      <Container sx={{ textAlign: "center" }}>
+        <Box
+          sx={{
+            display: "inline-flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 0.5,
+            opacity: count !== null ? 1 : 0,
+            transform: count !== null ? "translateY(0)" : "translateY(8px)",
+            transition: "opacity 0.5s ease, transform 0.5s ease",
+          }}
+        >
+          <PeopleAltOutlinedIcon sx={{ fontSize: 28, color: COLORS.accent, mb: 0.5 }} />
+
+          <Typography
+            sx={{
+              fontFamily: fontDisplay,
+              fontWeight: 700,
+              fontSize: { xs: "2.4rem", md: "3rem" },
+              color: COLORS.graphite,
+              lineHeight: 1,
+              letterSpacing: "0.5px",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {displayCount.toLocaleString()}
+          </Typography>
+
+          <Box
+            sx={{
+              width: 40,
+              height: 2,
+              bgcolor: COLORS.accent,
+              my: 1,
+              borderRadius: 1,
+            }}
+          />
+
+          <Typography
+            sx={{
+              fontFamily: fontBody,
+              fontSize: "0.8rem",
+              fontWeight: 600,
+              letterSpacing: "1.5px",
+              textTransform: "uppercase",
+              color: "text.secondary",
+            }}
+          >
+            Visitors to this site
+          </Typography>
+        </Box>
+      </Container>
+    </Box>
+  );
+}
+
 const HomePage = () => {
   const [heroIndex, setHeroIndex] = useState(0);
 
@@ -374,6 +466,7 @@ const HomePage = () => {
         </Container>
       </Box>
 
+
       {/* Quick facts strip — mill-certificate style, not icon cards */}
       <Box sx={{ bgcolor: COLORS.graphite, color: "#fff", py: { xs: 3, md: 4 } }}>
         <Container>
@@ -435,6 +528,8 @@ const HomePage = () => {
         }}
       >
       </Typography>
+
+      <VisitorCounter COLORS={COLORS} fontBody={fontBody} fontDisplay={fontDisplay} />
 
       {/* Who we are */}
       <Container sx={{

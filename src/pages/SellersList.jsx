@@ -75,7 +75,6 @@ function SellerCard({ name, country, requirement, onClick }) {
 function ProductDetails({ product }) {
   if (!product) return null;
 
-  // Rendered only if present, so this is safe even if your API doesn't return these fields.
   const extraFields = [
     { label: "Price", value: product.price },
     { label: "Quantity", value: product.quantity },
@@ -159,6 +158,8 @@ function ProductDetails({ product }) {
   );
 }
 
+const PRODUCTS_PER_PAGE = 4; // 2 columns x 2 rows
+
 export default function SellersList() {
   const [sellers, setSellers] = useState([]);
   const [page, setPage] = useState(1);
@@ -168,8 +169,8 @@ export default function SellersList() {
   const [openModal, setOpenModal] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [sellerProducts, setSellerProducts] = useState([]);
+  const [productPage, setProductPage] = useState(1);
 
-  // New: separate state for the product details modal
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [openProductModal, setOpenProductModal] = useState(false);
 
@@ -214,11 +215,20 @@ export default function SellersList() {
   );
   const totalPages = Math.ceil(filteredSellers.length / rowsPerPage);
 
+  // Pagination for the products inside the seller modal
+  const productStartIndex = (productPage - 1) * PRODUCTS_PER_PAGE;
+  const paginatedProducts = sellerProducts.slice(
+    productStartIndex,
+    productStartIndex + PRODUCTS_PER_PAGE
+  );
+  const totalProductPages = Math.ceil(sellerProducts.length / PRODUCTS_PER_PAGE);
+
   const handleCardClick = (seller) => {
     setSelectedSeller(seller);
     setOpenModal(true);
     setSelectedProduct(null);
     setSellerProducts([]);
+    setProductPage(1);
 
     const roleLocal = localStorage.getItem("role")?.toUpperCase();
     let endpoint = "";
@@ -251,23 +261,25 @@ export default function SellersList() {
     setSelectedSeller(null);
     setSellerProducts([]);
     setSelectedProduct(null);
+    setProductPage(1);
   };
 
   const handleSendEmail = () => {
     if (!selectedProduct || !selectedSeller) return;
 
-    axios
-      .post(
-        `/api/v1/email/intentToPurchase?fullName=${encodeURIComponent(
-          selectedSeller.fullName
-        )}&productId=${selectedProduct.id}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      )
+    axios.post(
+      "/api/v1/email/intentToPurchase",
+      {},
+      {
+        params: {
+          fullName: selectedSeller.fullName,
+          productId: selectedProduct.id,
+        },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    )
       .then(() => {
         const seller = selectedSeller;
         const product = selectedProduct;
@@ -277,6 +289,7 @@ export default function SellersList() {
         setSelectedSeller(null);
         setSellerProducts([]);
         setSelectedProduct(null);
+        setProductPage(1);
 
         showConfirmation({
           title: "Email Sent",
@@ -298,8 +311,8 @@ export default function SellersList() {
         <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
         <Typography
           variant="body1"
-            color="text.secondary"
-            sx={{ textAlign: "left", mb: 2 }}
+          color="text.secondary"
+          sx={{ textAlign: "left", mb: 2 }}
         >
           Browse sellers from around the world. Click a card to see their
           products. Select a product to request Admin to connect you.
@@ -319,24 +332,24 @@ export default function SellersList() {
         />
       </Box>
 
-      <Box  sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, 300px)", // exactly 5 fixed-width columns
-          gap: 3, // matches your old spacing={3}
-          justifyContent: "flex-start", // centers the WHOLE grid block, not each row individually
-        }}>
-        
-          {paginatedSellers.map((seller, index) => (
-            <Grid item xs={12} sm={6} md={4} key={seller.id || index}>
-              <SellerCard
-                name={seller.fullName}
-                country={seller.country}
-                requirement={seller.requirement}
-                onClick={() => handleCardClick(seller)}
-              />
-            </Grid>
-          ))}
-        
+      <Box sx={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, 300px)",
+        gap: 3,
+        justifyContent: "flex-start",
+      }}>
+
+        {paginatedSellers.map((seller, index) => (
+          <Grid item xs={12} sm={6} md={4} key={seller.id || index}>
+            <SellerCard
+              name={seller.fullName}
+              country={seller.country}
+              requirement={seller.requirement}
+              onClick={() => handleCardClick(seller)}
+            />
+          </Grid>
+        ))}
+
       </Box>
 
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4, p: 4 }}>
@@ -360,7 +373,7 @@ export default function SellersList() {
             p: 4,
             borderRadius: 2,
             boxShadow: 24,
-            width: { xs: "90%", sm: 700 },
+            width: { xs: "90%", sm: 520 },
             maxHeight: "80vh",
             overflowY: "auto",
           }}
@@ -383,63 +396,93 @@ export default function SellersList() {
           </Typography>
           <Divider sx={{ my: 2 }} />
 
-          <Grid container spacing={2}>
-            {sellerProducts.length === 0 && (
-              <Grid item xs={12}>
-                <Typography variant="body2" color="text.secondary">
-                  No products available.
-                </Typography>
-              </Grid>
-            )}
-
-            {sellerProducts.map((product) => (
-              <Grid item xs={12} sm={6} key={product.id}>
-                <Card
-                  onClick={() => handleProductClick(product)}
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    cursor: "pointer",
-                    border: "1px solid #eee",
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      transform: "translateY(-4px)",
-                      boxShadow: 4,
-                    },
-                  }}
-                >
-                  {product.photoUrls && product.photoUrls.length > 0 && (
+          {sellerProducts.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              No products available.
+            </Typography>
+          ) : (
+            <>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, 220px)",
+                  gap: 2,
+                  justifyContent: "center",
+                }}
+              >
+                {paginatedProducts.map((product) => (
+                  <Card
+                    key={product.id}
+                    onClick={() => handleProductClick(product)}
+                    sx={{
+                      width: 220,
+                      height: 260,
+                      overflow: "hidden",
+                      display: "flex",
+                      flexDirection: "column",
+                      cursor: "pointer",
+                      border: "1px solid #eee",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        transform: "translateY(-4px)",
+                        boxShadow: 4,
+                      },
+                    }}
+                  >
                     <CardMedia
                       component="img"
-                      image={product.photoUrls[0]}
+                      image={product.photoUrls?.[0] || undefined}
                       alt={product.productName}
-                      sx={{ height: 140, objectFit: "cover" }}
-                    />
-                  )}
-                  <CardContent>
-                    <Typography variant="subtitle1" fontWeight="bold" noWrap>
-                      {product.productName}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
                       sx={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: "vertical",
+                        height: 140,
+                        flexShrink: 0,
+                        objectFit: "cover",
+                        bgcolor: "grey.100",
+                      }}
+                    />
+                    <CardContent
+                      sx={{
+                        flexGrow: 1,
+                        minHeight: 0,
                         overflow: "hidden",
-                        textOverflow: "ellipsis",
+                        display: "flex",
+                        flexDirection: "column",
                       }}
                     >
-                      {product.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+                      <Typography variant="subtitle1" fontWeight="bold" noWrap>
+                        {product.productName}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {product.description}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+
+              {totalProductPages > 1 && (
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                  <Pagination
+                    count={totalProductPages}
+                    page={productPage}
+                    onChange={(e, value) => setProductPage(value)}
+                    color="primary"
+                    size="small"
+                  />
+                </Box>
+              )}
+            </>
+          )}
         </Box>
       </Modal>
 

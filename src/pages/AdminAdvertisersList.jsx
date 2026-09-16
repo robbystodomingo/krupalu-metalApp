@@ -49,7 +49,7 @@ export default function AdminAdvertisersList() {
         fetchAdvertisers();
     }, []);
 
-  
+
     const filteredAdvertisers = advertisers.filter((advertiser) => {
         const term = searchTerm.toLowerCase();
         return (
@@ -93,7 +93,7 @@ export default function AdminAdvertisersList() {
             <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
 
             {/* Controls row */}
-           <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, mb: 3 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
                 <TextField
                     label="Search Advertiser by Name, Country, Email, Phone, or Status"
                     variant="outlined"
@@ -120,7 +120,7 @@ export default function AdminAdvertisersList() {
             </Box>
 
             {/* Table */}
-            <TableContainer component={Paper} sx={{ p: 3, mt: 4 , justifyContent: "center"}}>
+            <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -144,7 +144,7 @@ export default function AdminAdvertisersList() {
             </TableContainer>
 
             {/* Pagination */}
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 4, p: 2 }}>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4, p: 2 }}>
                 <Pagination
                     count={totalPages}
                     page={page}

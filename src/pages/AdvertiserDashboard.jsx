@@ -13,11 +13,23 @@ import {
   FormControl,
   InputLabel,
   Divider,
+  Chip,
 } from "@mui/material";
 import axios from "axios";
 import AdvertisementDetailModal from "../modals/AdvertisementDetailModal";
 import AdvertisementModal from "../modals/AdvertisementModal";
 import { showConfirmation } from "../utils/ConfirmationModal";
+
+const STATUS_CHIP_PROPS = {
+  PENDING: { label: "Pending Review", color: "warning" },
+  APPROVED: { label: "Approved", color: "success" },
+  REJECTED: { label: "Rejected", color: "error" },
+};
+
+function StatusChip({ status }) {
+  const props = STATUS_CHIP_PROPS[status] || { label: status || "Unknown", color: "default" };
+  return <Chip size="small" label={props.label} color={props.color} sx={{ fontWeight: 600 }} />;
+}
 
 export default function AdvertiserDashboard() {
   const [advertisements, setAdvertisements] = useState([]);
@@ -77,7 +89,6 @@ export default function AdvertiserDashboard() {
   const totalPages = Math.ceil(advertisements.length / pageSize);
 
   return (
-
     <Box sx={{ p: 3, mt: 4 }}>
       <Typography variant="h4" gutterBottom>
         Advertiser Dashboard
@@ -113,6 +124,7 @@ export default function AdvertiserDashboard() {
         {paginatedAdvertisements.map((advertisement) => (
 
           <Card
+            key={advertisement.id}
             onClick={() => handleCardClick(advertisement.id)}
             sx={{
               cursor: "pointer",
@@ -137,7 +149,7 @@ export default function AdvertiserDashboard() {
               return (
                 firstImage && (
                   <CardMedia
-                    ccomponent="img"
+                    component="img"
                     sx={{ height: 180, objectFit: "cover" }}
                     image={firstImage}
                     alt={advertisement.advertisementName || "Advertisement"}
@@ -146,7 +158,7 @@ export default function AdvertiserDashboard() {
               );
             })()}
 
-            <CardContent sx={{ flexGrow: 1 }}>
+            <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
               <Typography variant="h6">{advertisement.advertisementName}</Typography>
               <Typography
                 variant="body2"
@@ -162,14 +174,16 @@ export default function AdvertiserDashboard() {
               >
                 {advertisement.description}
               </Typography>
+
+              <Box sx={{ mt: "auto", pt: 1 }}>
+                <StatusChip status={advertisement.approvalStatus} />
+              </Box>
             </CardContent>
           </Card>
 
         ))}
 
       </Box>
-
-
 
       {/* Pagination */}
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4, p: 4 }}>
@@ -187,6 +201,7 @@ export default function AdvertiserDashboard() {
         handleClose={() => setCreateOpen(false)}
         mode="create"
         onSuccess={() => {
+          setCreateOpen(false);
           showConfirmation({
             title: "Advertisement Listed",
             message: "Your advertisement has been successfully listed.",
@@ -203,6 +218,7 @@ export default function AdvertiserDashboard() {
         advertisement={selectedAdvertisement}
         mode="edit"
         onSuccess={() => {
+          setEditOpen(false);
           showConfirmation({
             title: "Advertisement Updated",
             message: "Your advertisement has been successfully updated.",
@@ -234,6 +250,4 @@ export default function AdvertiserDashboard() {
       />
     </Box>
   );
-
-
 }
