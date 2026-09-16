@@ -1,18 +1,14 @@
 package com.krupalu.MetalApp.services.impl;
 
 import com.krupalu.MetalApp.dto.AdvertisementPostRequest;
-import com.krupalu.MetalApp.dto.ProductPostRequest;
 import com.krupalu.MetalApp.entity.AdvertisementPost;
-import com.krupalu.MetalApp.entity.ProductCategory;
-import com.krupalu.MetalApp.entity.ProductPost;
 import com.krupalu.MetalApp.entity.User;
 import com.krupalu.MetalApp.enums.ApprovalStatus;
 import com.krupalu.MetalApp.repo.AdvertisementPostRepository;
 import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.AdvertisementPostService;
 import com.krupalu.MetalApp.util.MyUserDetails;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import com.krupalu.MetalApp.util.PhotoUrlResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -35,19 +31,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdvertisementPostServiceImpl implements AdvertisementPostService {
 
-    private final AdvertisementPostRepository advertisementPostRepository;
+    private static final String UPLOAD_ROOT = "D:/advertisements/";
 
+    private final AdvertisementPostRepository advertisementPostRepository;
     private final UserRepository userRepository;
+    private final PhotoUrlResolver photoUrlResolver;
 
     @Override
     public AdvertisementPost createAdvertisement(String userId, String advertisementName,
                                                  String description, List<MultipartFile> photos)
-                                                 throws IOException {
+            throws IOException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         log.info(String.valueOf(user));
 
-        // Save a post first to get its ID
         AdvertisementPost tempPost = AdvertisementPost.builder()
                 .advertisementName(advertisementName)
                 .description(description)
@@ -56,24 +53,25 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
                 .build();
         tempPost = advertisementPostRepository.save(tempPost);
 
+        // Store RELATIVE web paths only — never the raw disk path.
+        // PhotoUrlResolver applies the absolute URL only when reading data back out.
         List<String> photoPaths = new ArrayList<>();
         for (MultipartFile photo : photos) {
-            // 👇 include post ID in the folder path
-            String uploadDir = "D:/advertisements/" + userId + "/" + tempPost.getId();
+            String uploadDir = UPLOAD_ROOT + userId + "/" + tempPost.getId();
             Files.createDirectories(Paths.get(uploadDir));
 
-            // 👇 prefix filename with post ID to avoid collisions
             String fileName = tempPost.getId() + "_" + photo.getOriginalFilename();
             String filePath = uploadDir + "/" + fileName;
 
             Files.copy(photo.getInputStream(), Paths.get(filePath),
                     StandardCopyOption.REPLACE_EXISTING);
 
+            String webPath = "/advertisements/" + userId + "/" + tempPost.getId() + "/" + fileName;
 
             log.info("Saved file at: {}", filePath);
-            log.info("Rewritten URL: {}", rewritePath(filePath));
+            log.info("Web-servable path: {}", webPath);
 
-            photoPaths.add(filePath);
+            photoPaths.add(webPath);
         }
 
         tempPost.setPhotoUrls(photoPaths);
@@ -94,9 +92,11 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
                             .advertisementName(post.getAdvertisementName())
                             .description(post.getDescription())
                             .approvalStatus(post.getApprovalStatus())
-                            .photoUrls(post.getPhotoUrls().stream()
-                                    .map(this::rewritePath)
-                                    .toList())
+                            .photoUrls(post.getPhotoUrls() != null
+                                    ? post.getPhotoUrls().stream()
+                                    .map(photoUrlResolver::resolve)
+                                    .toList()
+                                    : List.of())
                             .advertiserName(advertiser != null ? advertiser.getFullName() : null)
                             .advertiserEmail(advertiser != null ? advertiser.getEmail() : null)
                             .advertiserPhoneNumber(advertiser != null ? advertiser.getPhoneNumber() : null)
@@ -111,7 +111,6 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
         AdvertisementPost post = advertisementPostRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        // Optional: enforce ownership
         if (!post.getUser().getId().toString().equals(userId)) {
             throw new RuntimeException("Unauthorized access to post");
         }
@@ -123,7 +122,11 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
                 .advertisementName(post.getAdvertisementName())
                 .description(post.getDescription())
                 .approvalStatus(post.getApprovalStatus())
-                .photoUrls(post.getPhotoUrls())
+                .photoUrls(post.getPhotoUrls() != null
+                        ? post.getPhotoUrls().stream()
+                        .map(photoUrlResolver::resolve)
+                        .toList()
+                        : List.of())
                 .advertiserName(advertiser != null ? advertiser.getFullName() : null)
                 .advertiserEmail(advertiser != null ? advertiser.getEmail() : null)
                 .advertiserPhoneNumber(advertiser != null ? advertiser.getPhoneNumber() : null)
@@ -136,19 +139,15 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
         AdvertisementPost post = advertisementPostRepository.findById(advertisementId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        // Optional: enforce ownership
         if (!post.getUser().getId().toString().equals(userId)) {
             throw new RuntimeException("Unauthorized access to post");
         }
 
-        // Delete files from disk
         if (post.getPhotoUrls() != null && !post.getPhotoUrls().isEmpty()) {
-            // All photo paths share the same folder: D:/uploads/<userId>/<postId>
-            Path postFolder = Paths.get("D:/advertisements/" + userId + "/" + advertisementId);
+            Path postFolder = Paths.get(UPLOAD_ROOT + userId + "/" + advertisementId);
             if (Files.exists(postFolder)) {
-                // Recursively delete folder and contents
                 Files.walk(postFolder)
-                        .sorted((a, b) -> b.compareTo(a)) // delete children before parent
+                        .sorted((a, b) -> b.compareTo(a))
                         .forEach(path -> {
                             try {
                                 Files.delete(path);
@@ -159,12 +158,12 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
             }
         }
 
-        // Delete post from DB
         advertisementPostRepository.delete(post);
     }
 
     @Override
-    public AdvertisementPost updateAdvertisement(Long advertisementId, String userId, String advertisementName, String description, List<MultipartFile> photos) throws IOException {
+    public AdvertisementPost updateAdvertisement(Long advertisementId, String userId, String advertisementName,
+                                                 String description, List<MultipartFile> photos) throws IOException {
         AdvertisementPost post = advertisementPostRepository.findById(advertisementId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
@@ -180,44 +179,24 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
         }
 
         if (photos != null && !photos.isEmpty()) {
-            // Replace photos logic (delete old, save new)
-            List<String> photoPaths = new ArrayList<>();
-            String uploadDir = "D:/advertisements/" + userId + "/" + advertisementId;
+            String uploadDir = UPLOAD_ROOT + userId + "/" + advertisementId;
             Files.createDirectories(Paths.get(uploadDir));
 
-            // Optional: clear old files
-            if (post.getPhotoUrls() != null) {
-                for (String oldPath : post.getPhotoUrls()) {
-                    try { Files.deleteIfExists(Paths.get(oldPath)); } catch (IOException ignored) {}
-                }
-            }
-
+            // Store RELATIVE web paths only — same as createAdvertisement.
+            List<String> photoPaths = new ArrayList<>();
             for (MultipartFile photo : photos) {
                 String fileName = advertisementId + "_" + photo.getOriginalFilename();
                 String filePath = uploadDir + "/" + fileName;
                 Files.copy(photo.getInputStream(), Paths.get(filePath),
                         StandardCopyOption.REPLACE_EXISTING);
-                photoPaths.add(filePath);
+
+                String webPath = "/advertisements/" + userId + "/" + advertisementId + "/" + fileName;
+                photoPaths.add(webPath);
             }
+
             post.setPhotoUrls(photoPaths);
         }
 
         return advertisementPostRepository.save(post);
-    }
-
-    private String rewritePath(String localPath) {
-        String baseUrl = "http://localhost:8082/advertisements";
-
-        String relativePath = localPath
-                .replace("D:/advertisements", "")
-                .replace("D:\\advertisements", "")
-                .replace("\\", "/");
-
-
-        if (relativePath.startsWith("/")) {
-            return baseUrl + relativePath;
-        } else {
-            return baseUrl + "/" + relativePath;
-        }
     }
 }

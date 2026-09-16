@@ -44,6 +44,76 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     public JWTAuthenticationResponse registration(RegistrationRequest registrationRequest) {
 
+        // Look for existing user first
+        var existingUserOpt = userRepository.findByEmail(registrationRequest.getEmail());
+
+        User user;
+        if (existingUserOpt.isPresent()) {
+            // ✅ Update existing user (created during subscription)
+            user = existingUserOpt.get();
+            user.setFullName(registrationRequest.getFullName());
+            user.setRole(registrationRequest.getRole());
+            user.setCountry(registrationRequest.getCountry());
+            user.setPhoneNumber(registrationRequest.getPhoneNumber());
+            user.setUsername(registrationRequest.getUsername());
+            user.setCategory(registrationRequest.getCategory());
+            user.setRequirement(registrationRequest.getRequirement());
+            user.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
+            user.setApprovalStatus(
+                    registrationRequest.getRole() == Role.BUYER
+                            ? ApprovalStatus.PENDING
+                            : ApprovalStatus.APPROVED
+            );
+        } else {
+            // 👇 fallback if subscription didn’t create user
+            user = User.builder()
+                    .fullName(registrationRequest.getFullName())
+                    .email(registrationRequest.getEmail())
+                    .role(registrationRequest.getRole())
+                    .country(registrationRequest.getCountry())
+                    .phoneNumber(registrationRequest.getPhoneNumber())
+                    .username(registrationRequest.getUsername())
+                    .category(registrationRequest.getCategory())
+                    .requirement(registrationRequest.getRequirement())
+                    .password(passwordEncoder.encode(registrationRequest.getPassword()))
+                    .approvalStatus(
+                            registrationRequest.getRole() == Role.BUYER
+                                    ? ApprovalStatus.PENDING
+                                    : ApprovalStatus.APPROVED
+                    )
+                    .trialUsed(false) // default
+                    .build();
+        }
+
+        var savedUser = userRepository.save(user);
+
+        // Buyer logic unchanged
+        if (savedUser.getRole() == Role.BUYER && savedUser.getApprovalStatus() == ApprovalStatus.PENDING) {
+            return JWTAuthenticationResponse.builder()
+                    .token(null)
+                    .refreshToken(null)
+                    .email(savedUser.getEmail())
+                    .fullName(savedUser.getFullName())
+                    .role(savedUser.getRole().name())
+                    .build();
+        }
+
+        var jwtToken = jwtService.generateToken(savedUser);
+        var refreshToken = jwtService.generateRefreshToken(new HashMap<>(), savedUser);
+        saveUserToken(savedUser, jwtToken);
+
+        return JWTAuthenticationResponse.builder()
+                .token(jwtToken)
+                .refreshToken(refreshToken)
+                .email(savedUser.getEmail())
+                .fullName(savedUser.getFullName())
+                .role(savedUser.getRole().name())
+                .build();
+    }
+
+
+    /*public JWTAuthenticationResponse registration(RegistrationRequest registrationRequest) {
+
         if (userService.userExists(registrationRequest.getEmail())) {
             throw new IllegalArgumentException("Email is already registered");
         }
@@ -88,7 +158,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .fullName(savedUser.getFullName())
                 .role(savedUser.getRole().name())
                 .build();
-    }
+    }*/
 
 
     public JWTAuthenticationResponse signin(SignInRequest signInRequest){

@@ -1,5 +1,12 @@
 package com.krupalu.MetalApp.services.impl;
 
+import com.krupalu.MetalApp.entity.BuyerRequest;
+import com.krupalu.MetalApp.entity.ProductPost;
+import com.krupalu.MetalApp.entity.User;
+import com.krupalu.MetalApp.enums.RequestStatus;
+import com.krupalu.MetalApp.repo.BuyerRequestRepository;
+import com.krupalu.MetalApp.repo.ProductPostRepository;
+import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -10,6 +17,15 @@ import org.springframework.stereotype.Service;
 public class EmailServiceImpl implements EmailService {
     @Autowired
     private JavaMailSender mailSender;
+
+    @Autowired
+    private BuyerRequestRepository buyerRequestRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ProductPostRepository productPostRepository;
 
     public void sendEmail(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -52,7 +68,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public void emailForIntentToPurchase(String fullName) {
+    public void emailForIntentToPurchase(String fullName, String id, Long productId) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("robbystodomingo@gmail.com");
         message.setTo("weefeephotobooth@gmail.com");
@@ -65,6 +81,20 @@ public class EmailServiceImpl implements EmailService {
                 "Thank you for your time, and I look forward to hearing from you.\n" +
                 "\n");
         mailSender.send(message);
+
+        User buyer = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Buyer not found with id: " + id));
+
+        ProductPost product = productPostRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+
+        BuyerRequest request = BuyerRequest.builder()
+                .buyer(buyer)
+                .productPost(product)
+                .status(RequestStatus.SENT)
+                .build();
+
+        buyerRequestRepository.save(request);
     }
 
     @Override

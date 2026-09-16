@@ -8,7 +8,7 @@ public interface EmailService {
 
     public void emailForAdvertiserOffer(String fullName);
 
-    public void emailForIntentToPurchase(String fullName);
+    public void emailForIntentToPurchase(String fullName, String id, Long productId);
 
     public void sendTrialReminder(String email);
 }

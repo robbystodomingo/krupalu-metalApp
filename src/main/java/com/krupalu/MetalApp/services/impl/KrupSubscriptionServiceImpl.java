@@ -3,6 +3,8 @@ package com.krupalu.MetalApp.services.impl;
 import com.krupalu.MetalApp.config.StripeConfig;
 import com.krupalu.MetalApp.dto.SetupIntentResponse;
 import com.krupalu.MetalApp.entity.User;
+import com.krupalu.MetalApp.enums.ApprovalStatus;
+import com.krupalu.MetalApp.enums.Role;
 import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.KrupSubcriptionService;
 import com.krupalu.MetalApp.util.SubscriptionJob;
@@ -18,6 +20,7 @@ import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.LocalDateTime;
@@ -40,8 +43,10 @@ public class KrupSubscriptionServiceImpl implements KrupSubcriptionService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public SetupIntentResponse savePaymentMethod(String email) throws StripeException, SchedulerException {
 
+        // Step 1: Always create/find Stripe customer first
         String customerId = findOrCreateCustomer(email);
 
         SetupIntentCreateParams params = SetupIntentCreateParams.builder()
@@ -52,56 +57,45 @@ public class KrupSubscriptionServiceImpl implements KrupSubcriptionService {
         SetupIntent setupIntent = SetupIntent.create(params);
 
         try {
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            long trialEndEpoch = LocalDateTime.now()
+                    .plusMonths(6)
+                    .atZone(ZoneId.systemDefault())
+                    .toEpochSecond();
 
-            Subscription subscription;
+            SubscriptionCreateParams subscriptionParams = SubscriptionCreateParams.builder()
+                    .setCustomer(customerId)
+                    .addItem(
+                            SubscriptionCreateParams.Item.builder()
+                                    .setPrice(stripeConfig.getPriceId())
+                                    .build()
+                    )
+                    .setCurrency(stripeConfig.getCurrency())
+                    .setTrialEnd(trialEndEpoch)
+                    .build();
 
-            if (!user.isTrialUsed()) {
-                // ✅ First time → create subscription with trial
-                long trialEndEpoch = LocalDateTime.now()
-                        .plusMonths(6)
-                        .atZone(ZoneId.systemDefault())
-                        .toEpochSecond();
+            Subscription subscription = Subscription.create(subscriptionParams);
+            logger.info("Subscription created: " + subscription.getId());
 
-                SubscriptionCreateParams subscriptionParams = SubscriptionCreateParams.builder()
-                        .setCustomer(customerId)
-                        .addItem(
-                                SubscriptionCreateParams.Item.builder()
-                                        .setPrice(stripeConfig.getPriceId())
-                                        .build()
-                        )
-                        .setCurrency(stripeConfig.getCurrency())
-                        .setTrialEnd(trialEndEpoch)
-                        .setDefaultPaymentMethod(setupIntent.getPaymentMethod())
-                        .build();
+            // ✅ Find or create user record
+            User user = userRepository.findByEmail(email).orElseGet(() -> {
+                User newUser = new User();
+                newUser.setEmail(email);
+                newUser.setTrialUsed(false);
+                newUser.setApprovalStatus(ApprovalStatus.APPROVED); // advertisers auto-approved
+                newUser.setRole(Role.ADVERTISER);
+                return newUser;
+            });
 
-                subscription = Subscription.create(subscriptionParams);
-                logger.info("Subscription created with trial until: " + trialEndEpoch);
+            // ✅ Persist Stripe details
+            user.setStripeCustomerId(customerId);
+            user.setStripeSubscriptionId(subscription.getId());
+            user.setTrialUsed(true);
 
-                // ✅ Persist subscription ID and trial flag
-                user.setTrialUsed(true);
-                user.setStripeSubscriptionId(subscription.getId());
-                userRepository.save(user);
-
-            } else {
-                // ✅ Subsequent times → update payment method only
-                PaymentMethod pm = PaymentMethod.retrieve(setupIntent.getPaymentMethod());
-                pm.attach(PaymentMethodAttachParams.builder().setCustomer(customerId).build());
-
-                subscription = Subscription.retrieve(user.getStripeSubscriptionId());
-
-                SubscriptionUpdateParams updateParams = SubscriptionUpdateParams.builder()
-                        .setDefaultPaymentMethod(pm.getId())
-                        .build();
-
-                subscription.update(updateParams);
-                logger.info("Updated subscription with new payment method: " + pm.getId());
-            }
+            userRepository.save(user);
 
         } catch (Exception e) {
-            logger.severe("Failed to start or update subscription: " + e.getMessage());
-            throw new JobExecutionException("Failed to start or update subscription", e);
+            logger.severe("Failed to start subscription: " + e.getMessage());
+            throw new JobExecutionException("Failed to start subscription", e);
         }
 
         return new SetupIntentResponse(
@@ -111,6 +105,7 @@ public class KrupSubscriptionServiceImpl implements KrupSubcriptionService {
                 customerId
         );
     }
+
 
 
     private String findOrCreateCustomer(String email) throws StripeException {

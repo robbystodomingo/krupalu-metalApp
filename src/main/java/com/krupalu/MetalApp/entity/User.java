@@ -25,7 +25,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user")
-public class User implements UserDetails {
+public class  User implements UserDetails {
 
     @Id
     private String id;
@@ -45,6 +45,8 @@ public class User implements UserDetails {
     private boolean trialUsed;
 
     private String stripeSubscriptionId;
+
+    private String stripeCustomerId;
 
     @Enumerated(EnumType.STRING)
     private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;

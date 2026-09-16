@@ -1,9 +1,12 @@
 package com.krupalu.MetalApp.controller;
 
+import com.krupalu.MetalApp.dto.BuyerItemRequest;
 import com.krupalu.MetalApp.dto.ProductPostRequest;
 import com.krupalu.MetalApp.entity.User;
+import com.krupalu.MetalApp.services.BuyerService;
 import com.krupalu.MetalApp.services.ProductPostViewService;
 import com.krupalu.MetalApp.services.UserService;
+import com.krupalu.MetalApp.util.AuthUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +24,8 @@ public class BuyerController {
 
     private final ProductPostViewService productPostViewService;
 
+    private final BuyerService buyerService;
+
     @GetMapping("/sellersList")
     public ResponseEntity<List<User>> getSellers() {
         return ResponseEntity.ok(userService.getSellers());
@@ -35,5 +40,11 @@ public class BuyerController {
     @PreAuthorize("hasAuthority('BUYER')")
     public List<ProductPostRequest> getSellerProducts(@PathVariable String sellerId) {
         return productPostViewService.getApprovedPostsBySeller(sellerId);
+    }
+
+    @GetMapping("/requestedItems")
+    public List<BuyerItemRequest> getRequestedItems() {
+        String id = AuthUtils.getLoggedInUserId();
+        return buyerService.getAllRequestedItems(id);
     }
 }

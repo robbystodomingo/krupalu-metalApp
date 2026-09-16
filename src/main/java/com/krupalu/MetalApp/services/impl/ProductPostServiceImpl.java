@@ -10,6 +10,7 @@ import com.krupalu.MetalApp.repo.ProductPostRepository;
 import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.ProductPostService;
 import com.krupalu.MetalApp.util.MyUserDetails;
+import com.krupalu.MetalApp.util.PhotoUrlResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -17,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,6 +27,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -32,10 +35,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductPostServiceImpl implements ProductPostService {
 
+    private static final String UPLOAD_ROOT = "D:/uploads/";
+
     private final ProductPostRepository postRepository;
     private final ProductCategoryRepository categoryRepository;
-
     private final UserRepository userRepository;
+
+    private final PhotoUrlResolver photoUrlResolver;
 
     @Override
     @Transactional
@@ -48,7 +54,7 @@ public class ProductPostServiceImpl implements ProductPostService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         log.info(String.valueOf(user));
 
-        // Save a post first to get its ID
+
         ProductPost tempPost = ProductPost.builder()
                 .productName(productName)
                 .category(category)
@@ -60,7 +66,7 @@ public class ProductPostServiceImpl implements ProductPostService {
 
         List<String> photoPaths = new ArrayList<>();
         for (MultipartFile photo : photos) {
-            String uploadDir = "D:/uploads/" + userId + "/" + tempPost.getId();
+            String uploadDir = UPLOAD_ROOT + userId + "/" + tempPost.getId();
             Files.createDirectories(Paths.get(uploadDir));
 
             String fileName = tempPost.getId() + "_" + photo.getOriginalFilename();
@@ -69,7 +75,6 @@ public class ProductPostServiceImpl implements ProductPostService {
             Files.copy(photo.getInputStream(), Paths.get(filePath),
                     StandardCopyOption.REPLACE_EXISTING);
 
-            // Store the web-servable path, not the disk path
             String webPath = "/uploads/" + userId + "/" + tempPost.getId() + "/" + fileName;
 
             log.info("Saved file at: {}", filePath);
@@ -81,10 +86,6 @@ public class ProductPostServiceImpl implements ProductPostService {
         tempPost.setPhotoUrls(photoPaths);
         return postRepository.save(tempPost);
     }
-
-
-
-
 
     @Override
     public List<ProductPostRequest> getAllPostings() {
@@ -104,12 +105,19 @@ public class ProductPostServiceImpl implements ProductPostService {
         return posts.stream()
                 .map(p -> {
                     User seller = p.getUser();
+
+                    List<String> rewrittenUrls = p.getPhotoUrls() != null
+                            ? p.getPhotoUrls().stream()
+                            .map(photoUrlResolver::resolve)
+                            .collect(Collectors.toCollection(ArrayList::new))
+                            : new ArrayList<>();
+
                     return ProductPostRequest.builder()
                             .id(p.getId())
                             .productName(p.getProductName())
                             .description(p.getDescription())
                             .approvalStatus(p.getApprovalStatus())
-                            .photoUrls(p.getPhotoUrls())
+                            .photoUrls(rewrittenUrls)
                             .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
                             .sellerName(seller != null ? seller.getFullName() : null)
                             .sellerEmail(seller != null ? seller.getEmail() : null)
@@ -119,7 +127,6 @@ public class ProductPostServiceImpl implements ProductPostService {
                 })
                 .toList();
     }
-
 
     @Override
     public ProductPostRequest getPostById(Long id, String userId) {
@@ -132,59 +139,41 @@ public class ProductPostServiceImpl implements ProductPostService {
 
         User seller = post.getUser();
 
+        List<String> rewrittenUrls = post.getPhotoUrls() != null
+                ? post.getPhotoUrls().stream()
+                .map(photoUrlResolver::resolve)
+                .collect(Collectors.toCollection(ArrayList::new))
+                : new ArrayList<>();
+
         return ProductPostRequest.builder()
                 .id(post.getId())
                 .productName(post.getProductName())
                 .description(post.getDescription())
                 .approvalStatus(post.getApprovalStatus())
-                .photoUrls(post.getPhotoUrls().stream()
-                        .map(this::rewritePath)
-                        .toList())
+                .photoUrls(rewrittenUrls)
                 .categoryName(post.getCategory() != null ? post.getCategory().getCategoryName() : null)
                 .sellerName(seller != null ? seller.getFullName() : null)
                 .sellerEmail(seller != null ? seller.getEmail() : null)
                 .sellerPhoneNumber(seller != null ? seller.getPhoneNumber() : null)
-                .userId(seller != null ? String.valueOf(seller.getId()) : null) // or .userId(seller.getId()) if you switch the DTO field to Long
+                .userId(seller != null ? String.valueOf(seller.getId()) : null)
                 .build();
     }
-
-
-    private String rewritePath(String localPath) {
-        String baseUrl = "http://localhost:8082/uploads";
-
-        // Normalize both forward and backward slashes
-        String relativePath = localPath
-                .replace("D:/uploads", "")
-                .replace("D:\\uploads", "")
-                .replace("\\", "/");
-
-        // Ensure no accidental double slashes
-        if (relativePath.startsWith("/")) {
-            return baseUrl + relativePath;
-        } else {
-            return baseUrl + "/" + relativePath;
-        }
-    }
-
 
     @Transactional
     public void deletePost(Long postId, String userId) throws IOException {
         ProductPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-
         if (!post.getUser().getId().equals(userId)) {
             throw new RuntimeException("Unauthorized access to post");
         }
 
-        // Delete files from disk
+
         if (post.getPhotoUrls() != null && !post.getPhotoUrls().isEmpty()) {
-            // All photo paths share the same folder: D:/uploads/<userId>/<postId>
-            Path postFolder = Paths.get("D:/uploads/" + userId + "/" + postId);
+            Path postFolder = Paths.get(UPLOAD_ROOT + userId + "/" + postId);
             if (Files.exists(postFolder)) {
-                // Recursively delete folder and contents
                 Files.walk(postFolder)
-                        .sorted((a, b) -> b.compareTo(a)) // delete children before parent
+                        .sorted((a, b) -> b.compareTo(a))
                         .forEach(path -> {
                             try {
                                 Files.delete(path);
@@ -195,7 +184,6 @@ public class ProductPostServiceImpl implements ProductPostService {
             }
         }
 
-        // Delete post from DB
         postRepository.delete(post);
     }
 
@@ -223,29 +211,24 @@ public class ProductPostServiceImpl implements ProductPostService {
             post.setCategory(category);
         }
         if (photos != null && !photos.isEmpty()) {
-            // Replace photos logic (delete old, save new)
-            List<String> photoPaths = new ArrayList<>();
-            String uploadDir = "D:/uploads/" + userId + "/" + postId;
+            String uploadDir = UPLOAD_ROOT + userId + "/" + postId;
             Files.createDirectories(Paths.get(uploadDir));
 
-            // Optional: clear old files
-            if (post.getPhotoUrls() != null) {
-                for (String oldPath : post.getPhotoUrls()) {
-                    try { Files.deleteIfExists(Paths.get(oldPath)); } catch (IOException ignored) {}
-                }
-            }
-
+            // Store RELATIVE web paths only — same as createPost, no rewritePath() here.
+            List<String> photoPaths = new ArrayList<>();
             for (MultipartFile photo : photos) {
                 String fileName = postId + "_" + photo.getOriginalFilename();
                 String filePath = uploadDir + "/" + fileName;
                 Files.copy(photo.getInputStream(), Paths.get(filePath),
                         StandardCopyOption.REPLACE_EXISTING);
-                photoPaths.add(filePath);
+
+                String webPath = "/uploads/" + userId + "/" + postId + "/" + fileName;
+                photoPaths.add(webPath);
             }
+
             post.setPhotoUrls(photoPaths);
         }
 
         return postRepository.save(post);
     }
-
 }

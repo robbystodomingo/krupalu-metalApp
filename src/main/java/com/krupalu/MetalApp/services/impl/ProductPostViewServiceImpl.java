@@ -7,19 +7,19 @@ import com.krupalu.MetalApp.enums.ApprovalStatus;
 import com.krupalu.MetalApp.repo.ProductPostRepository;
 import com.krupalu.MetalApp.services.ProductPostService;
 import com.krupalu.MetalApp.services.ProductPostViewService;
+import com.krupalu.MetalApp.util.PhotoUrlResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ProductPostViewServiceImpl implements ProductPostViewService {
 
     private final ProductPostRepository postRepository;
 
-    public ProductPostViewServiceImpl(ProductPostRepository postRepository) {
-        this.postRepository = postRepository;
-    }
+    private final PhotoUrlResolver photoUrlResolver;
 
     @Override
     public List<ProductPostRequest> getApprovedPostsBySeller(String sellerId) {
@@ -27,18 +27,20 @@ public class ProductPostViewServiceImpl implements ProductPostViewService {
                 sellerId, ApprovalStatus.APPROVED
         );
 
-        System.out.println("Fetching approved posts for sellerId=" + sellerId);
-        System.out.println("Found posts count=" + posts.size());
-
         return posts.stream()
                 .map(p -> {
                     User seller = p.getUser();
+                    List<String> rewrittenUrls = p.getPhotoUrls() != null
+                            ? p.getPhotoUrls().stream()
+                            .map(photoUrlResolver::resolve)
+                            .toList()
+                            : List.of();
                     return ProductPostRequest.builder()
                             .id(p.getId())
                             .productName(p.getProductName())
                             .description(p.getDescription())
                             .approvalStatus(p.getApprovalStatus())
-                            .photoUrls(p.getPhotoUrls())
+                            .photoUrls(rewrittenUrls)
                             .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
                             .sellerName(seller != null ? seller.getFullName() : null)
                             .sellerEmail(seller != null ? seller.getEmail() : null)
@@ -47,28 +49,6 @@ public class ProductPostViewServiceImpl implements ProductPostViewService {
                             .build();
                 })
                 .toList();
-
-    }
-
-
-
-
-
-    private String rewritePath(String localPath) {
-        String baseUrl = "http://localhost:8082/uploads";
-
-        // Normalize both forward and backward slashes
-        String relativePath = localPath
-                .replace("D:/uploads", "")
-                .replace("D:\\uploads", "")
-                .replace("\\", "/");
-
-        // Ensure no accidental double slashes
-        if (relativePath.startsWith("/")) {
-            return baseUrl + relativePath;
-        } else {
-            return baseUrl + "/" + relativePath;
-        }
     }
 
 }

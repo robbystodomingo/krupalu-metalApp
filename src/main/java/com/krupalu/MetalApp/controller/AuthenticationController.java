@@ -6,10 +6,14 @@ import com.krupalu.MetalApp.dto.JWTAuthenticationResponse;
 import com.krupalu.MetalApp.dto.RefreshTokenRequest;
 import com.krupalu.MetalApp.dto.SignInRequest;
 import com.krupalu.MetalApp.dto.RegistrationRequest;
+import com.krupalu.MetalApp.entity.PasswordResetToken;
 import com.krupalu.MetalApp.entity.User;
+import com.krupalu.MetalApp.repo.PasswordResetTokenRepository;
 import com.krupalu.MetalApp.services.AuthenticationService;
 import com.krupalu.MetalApp.services.JWTService;
+import com.krupalu.MetalApp.services.PasswordResetService;
 import com.krupalu.MetalApp.services.UserService;
+import com.krupalu.MetalApp.token.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -18,6 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 
 @RestController
@@ -33,6 +39,12 @@ public class AuthenticationController {
     private final LogoutService logoutService;
 
     private final UserService userService;
+
+    private final PasswordResetService passwordResetService;
+
+    // Make sure this is the same repository you used to save the OTP
+    private final PasswordResetTokenRepository tokenRepository;
+
 
     @PostMapping("/register")
     public ResponseEntity<JWTAuthenticationResponse> registration(@Valid @RequestBody RegistrationRequest registrationRequest){
@@ -67,4 +79,40 @@ public class AuthenticationController {
         boolean exists = userService.userExists(email);
         return ResponseEntity.ok(exists);
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        try {
+            String token = passwordResetService.createPasswordResetToken(email);
+            // In production: send token via email link
+            return ResponseEntity.ok("Password reset link sent. Token: " + token);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String token,
+                                           @RequestParam String newPassword) {
+        try {
+            passwordResetService.resetPassword(token, newPassword);
+            return ResponseEntity.ok("Password reset successful");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
+    @PostMapping("/validate-otp")
+    public ResponseEntity<?> validateOtp(@RequestParam String token) {
+        PasswordResetToken resetToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid OTP"));
+
+        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.badRequest().body("OTP expired");
+        }
+
+        return ResponseEntity.ok("OTP valid");
+    }
+
 }

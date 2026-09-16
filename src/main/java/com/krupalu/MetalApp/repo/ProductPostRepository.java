@@ -19,5 +19,4 @@ public interface ProductPostRepository extends JpaRepository<ProductPost, Long> 
 
     List<ProductPost> findByUser_IdAndApprovalStatus(String userId, ApprovalStatus status);
 
-
 }

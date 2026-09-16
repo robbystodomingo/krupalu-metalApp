@@ -2,6 +2,7 @@ package com.krupalu.MetalApp.controller;
 
 import com.krupalu.MetalApp.dto.EmailRequest;
 import com.krupalu.MetalApp.services.EmailService;
+import com.krupalu.MetalApp.util.AuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,8 +32,9 @@ public class EmailController {
     }
 
     @PostMapping("/intentToPurchase")
-    public String emailForIntentToPurchase(@RequestParam String fullName) {
-        emailService.emailForIntentToPurchase(fullName);
+    public String emailForIntentToPurchase(@RequestParam String fullName, @RequestParam Long productId ) {
+        String id = AuthUtils.getLoggedInUserId();
+        emailService.emailForIntentToPurchase(fullName, id, productId);
         return "Email sent to Admin to discuss my intent to purchase product's from: " + fullName;
     }
 
