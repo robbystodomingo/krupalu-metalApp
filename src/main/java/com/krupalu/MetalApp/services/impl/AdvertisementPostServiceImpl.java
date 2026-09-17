@@ -11,6 +11,7 @@ import com.krupalu.MetalApp.util.MyUserDetails;
 import com.krupalu.MetalApp.util.PhotoUrlResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,9 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class AdvertisementPostServiceImpl implements AdvertisementPostService {
+
+    @Value("${app.ads-dir}")
+    private String uploadRoot;
 
     private static final String UPLOAD_ROOT = "D:/advertisements/";
 
@@ -57,7 +61,7 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
         // PhotoUrlResolver applies the absolute URL only when reading data back out.
         List<String> photoPaths = new ArrayList<>();
         for (MultipartFile photo : photos) {
-            String uploadDir = UPLOAD_ROOT + userId + "/" + tempPost.getId();
+            String uploadDir = uploadRoot + userId + "/" + tempPost.getId();
             Files.createDirectories(Paths.get(uploadDir));
 
             String fileName = tempPost.getId() + "_" + photo.getOriginalFilename();
@@ -144,7 +148,7 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
         }
 
         if (post.getPhotoUrls() != null && !post.getPhotoUrls().isEmpty()) {
-            Path postFolder = Paths.get(UPLOAD_ROOT + userId + "/" + advertisementId);
+            Path postFolder = Paths.get(uploadRoot + userId + "/" + advertisementId);
             if (Files.exists(postFolder)) {
                 Files.walk(postFolder)
                         .sorted((a, b) -> b.compareTo(a))
@@ -179,7 +183,7 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
         }
 
         if (photos != null && !photos.isEmpty()) {
-            String uploadDir = UPLOAD_ROOT + userId + "/" + advertisementId;
+            String uploadDir = uploadRoot + userId + "/" + advertisementId;
             Files.createDirectories(Paths.get(uploadDir));
 
             // Store RELATIVE web paths only — same as createAdvertisement.

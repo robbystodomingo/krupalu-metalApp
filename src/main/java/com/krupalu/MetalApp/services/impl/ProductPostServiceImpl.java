@@ -13,6 +13,7 @@ import com.krupalu.MetalApp.util.MyUserDetails;
 import com.krupalu.MetalApp.util.PhotoUrlResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -35,8 +36,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductPostServiceImpl implements ProductPostService {
 
+    @Value("${app.upload-dir}")
+    private String uploadRoot;
     private static final String UPLOAD_ROOT = "D:/uploads/";
-
     private final ProductPostRepository postRepository;
     private final ProductCategoryRepository categoryRepository;
     private final UserRepository userRepository;
@@ -66,7 +68,7 @@ public class ProductPostServiceImpl implements ProductPostService {
 
         List<String> photoPaths = new ArrayList<>();
         for (MultipartFile photo : photos) {
-            String uploadDir = UPLOAD_ROOT + userId + "/" + tempPost.getId();
+            String uploadDir = uploadRoot + userId + "/" + tempPost.getId();
             Files.createDirectories(Paths.get(uploadDir));
 
             String fileName = tempPost.getId() + "_" + photo.getOriginalFilename();
@@ -170,7 +172,7 @@ public class ProductPostServiceImpl implements ProductPostService {
 
 
         if (post.getPhotoUrls() != null && !post.getPhotoUrls().isEmpty()) {
-            Path postFolder = Paths.get(UPLOAD_ROOT + userId + "/" + postId);
+            Path postFolder = Paths.get(uploadRoot + userId + "/" + postId);
             if (Files.exists(postFolder)) {
                 Files.walk(postFolder)
                         .sorted((a, b) -> b.compareTo(a))
@@ -211,7 +213,7 @@ public class ProductPostServiceImpl implements ProductPostService {
             post.setCategory(category);
         }
         if (photos != null && !photos.isEmpty()) {
-            String uploadDir = UPLOAD_ROOT + userId + "/" + postId;
+            String uploadDir = uploadRoot + userId + "/" + postId;
             Files.createDirectories(Paths.get(uploadDir));
 
             // Store RELATIVE web paths only — same as createPost, no rewritePath() here.

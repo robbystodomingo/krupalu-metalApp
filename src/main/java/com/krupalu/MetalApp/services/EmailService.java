@@ -17,4 +17,12 @@ public interface EmailService {
     public void sendRejectionEmail(String to, String fullName, String role);
 
     public void sendRequirementEditedEmail(String to, String fullName, String role);
+
+    public void sendProductPostingApproval(String to, String fullName, String role);
+
+    public void sendAdvertisementPostingApproval(String to, String fullName, String role);
+
+    public void sendProductPostingRejection(String to, String fullName, String role);
+
+    public void sendAdvertisementPostingRejection(String to, String fullName, String role);
 }

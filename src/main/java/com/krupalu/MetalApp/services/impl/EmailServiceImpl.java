@@ -147,6 +147,51 @@ public class EmailServiceImpl implements EmailService {
         safeSend(message);
     }
 
+    @Override
+    public void sendProductPostingApproval(String to, String fullName, String role) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("sd.apps.co@gmail.com");
+        message.setTo(to);
+        message.setSubject("Your product has been approved");
+        message.setText("Hi " + fullName + ",\n\n" +
+                "Your product has been approved. Thank you!");
+        safeSend(message);
+    }
+
+    @Override
+    public void sendAdvertisementPostingApproval(String to, String fullName, String role) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("sd.apps.co@gmail.com");
+        message.setTo(to);
+        message.setSubject("Your advertisement has been approved");
+        message.setText("Hi " + fullName + ",\n\n" +
+                "Your advertisement has been approved. Thank you!");
+        safeSend(message);
+    }
+
+    @Override
+    public void sendProductPostingRejection(String to, String fullName, String role) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("sd.apps.co@gmail.com");
+        message.setTo(to);
+        message.setSubject("Your product has been rejected");
+        message.setText("Hi " + fullName + ",\n\n" +
+                "Your product has been rejected. Sorry. Please contact Admin for any clarification or question.");
+        safeSend(message);
+    }
+
+    @Override
+    public void sendAdvertisementPostingRejection(String to, String fullName, String role) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("sd.apps.co@gmail.com");
+        message.setTo(to);
+        message.setSubject("Your advertisement has been rejected");
+        message.setText("Hi " + fullName + ",\n\n" +
+                "Your advertisement has been rejected. Sorry. Please contact Admin for any clarification or question.");
+        safeSend(message);
+    }
+
+
     private void safeSend(SimpleMailMessage message) {
         try {
             mailSender.send(message);

@@ -73,7 +73,18 @@ public class AdminServiceImpl implements AdminService {
         ProductPost product = productPostRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         product.setApprovalStatus(status);
-        return productPostRepository.save(product);
+        ProductPost saved = productPostRepository.save(product);
+
+        User seller = saved.getUser();
+        if (seller != null) {
+            if (status == ApprovalStatus.APPROVED) {
+                emailService.sendProductPostingApproval(seller.getEmail(), seller.getFullName(), "SELLER");
+            } else if (status == ApprovalStatus.REJECTED) {
+                emailService.sendProductPostingRejection(seller.getEmail(), seller.getFullName(), "SELLER");
+            }
+        }
+
+        return saved;
     }
 
     @Override
@@ -81,7 +92,18 @@ public class AdminServiceImpl implements AdminService {
         AdvertisementPost ad = advertisementPostRepository.findById(adId)
                 .orElseThrow(() -> new RuntimeException("Advertisement not found"));
         ad.setApprovalStatus(status);
-        return advertisementPostRepository.save(ad);
+        AdvertisementPost saved = advertisementPostRepository.save(ad);
+
+        User advertiser = saved.getUser();
+        if (advertiser != null) {
+            if (status == ApprovalStatus.APPROVED) {
+                emailService.sendAdvertisementPostingApproval(advertiser.getEmail(), advertiser.getFullName(), "ADVERTISER");
+            } else if (status == ApprovalStatus.REJECTED) {
+                emailService.sendAdvertisementPostingRejection(advertiser.getEmail(), advertiser.getFullName(), "ADVERTISER");
+            }
+        }
+
+        return saved;
     }
 
     @Override
