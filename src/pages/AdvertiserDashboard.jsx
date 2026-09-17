@@ -203,8 +203,8 @@ export default function AdvertiserDashboard() {
         onSuccess={() => {
           setCreateOpen(false);
           showConfirmation({
-            title: "Advertisement Listed",
-            message: "Your advertisement has been successfully listed.",
+            title: "Advertisement for Review",
+            message: "Your advertisement has been submitted for approval.",
             confirmText: "OK",
           }).then(() => {
             fetchAdvertisements();
