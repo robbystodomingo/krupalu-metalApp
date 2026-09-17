@@ -10,8 +10,10 @@ import {
   Modal,
   Button,
   TextField,
+  IconButton,
 } from "@mui/material";
 import axios from "axios";
+import CloseIcon from "@mui/icons-material/Close";
 
 import { showConfirmation } from "../utils/ConfirmationModal";
 
@@ -243,15 +245,27 @@ export default function BuyersList() {
             textAlign: "center",
           }}
         >
+          {/* X Close button */}
+          <IconButton
+            onClick={() => setOpenModal(false)}
+            sx={{ position: "absolute", right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+
           <Typography variant="h6" gutterBottom>
             Request Admin to offer {selectedBuyer?.fullName} my product.
           </Typography>
 
-          <Typography variant="body2" color="text.secondary">
-            {selectedBuyer?.requirement}
-          </Typography>
-
           <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
+
+          <Box sx={{ textAlign: "left", mb: 3 }}>
+            <Typography variant="subtitle1"><strong>Name:</strong> {selectedBuyer?.fullName}</Typography>
+            <Typography variant="subtitle1"><strong>Country:</strong> {selectedBuyer?.country}</Typography>
+            <Typography variant="body1" sx={{ mt: 1 }}>
+              <strong>Requirements:</strong> {selectedBuyer?.requirement || "No requirement provided"}
+            </Typography>
+          </Box>
 
           <Button variant="contained" color="primary" onClick={handleSendEmail}>
             Send Request to Admin

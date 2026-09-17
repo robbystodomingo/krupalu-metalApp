@@ -10,6 +10,7 @@ import {
     Divider,
     Grid,
     IconButton,
+    TextField,
     Typography
 } from "@mui/material";
 import React from "react";
@@ -71,7 +72,13 @@ const getFullUrl = (url) => {
   return `${base.replace(/\/$/, "")}/${s.replace(/^\//, "")}`;
 };
 
-export default function ViewProductModal({ open, onClose, item, type }) {
+const roleLabels = {
+  buyers: "Buyer Requirement",
+  sellers: "Seller Requirement",
+  advertisers: "Advertiser Requirement",
+};
+
+export default function ViewProductModal({ open, onClose, item, type, onSaveRequirement }) {
   const mainImageFallback =
     "data:image/svg+xml;utf8," +
     encodeURIComponent(
@@ -85,6 +92,12 @@ export default function ViewProductModal({ open, onClose, item, type }) {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [mainSrc, setMainSrc] = React.useState(photoUrls[0] || mainImageFallback);
 
+  const isPersonType = type === "buyers" || type === "sellers" || type === "advertisers";
+
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editedRequirement, setEditedRequirement] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+
   React.useEffect(() => {
     setActiveIndex(0);
     setMainSrc(photoUrls[0] || mainImageFallback);
@@ -94,6 +107,11 @@ export default function ViewProductModal({ open, onClose, item, type }) {
   React.useEffect(() => {
     setMainSrc(photoUrls[activeIndex] || mainImageFallback);
   }, [activeIndex, photoUrls.length]);
+
+  React.useEffect(() => {
+    setIsEditing(false);
+    setEditedRequirement(item?.requirement || "");
+  }, [item?.id]);
 
   React.useEffect(() => {
     if (!open) return undefined;
@@ -113,7 +131,26 @@ export default function ViewProductModal({ open, onClose, item, type }) {
   if (!item) return null;
 
   const heading = type === "ads" ? item.title : type === "products" ? item.productName : item.fullName;
-  const subheading = type === "ads" ? "Advertisement" : type === "products" ? "Product" : "Buyer Requirement";
+  const subheading = type === "ads" ? "Advertisement" : type === "products" ? "Product" : (roleLabels[type] || "Details");
+
+  const handleSave = async () => {
+    if (!onSaveRequirement) {
+      setIsEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSaveRequirement(type, item.id, editedRequirement);
+      setIsEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedRequirement(item.requirement || "");
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
@@ -156,7 +193,7 @@ export default function ViewProductModal({ open, onClose, item, type }) {
 
 
       <DialogContent sx={{ pt: 2.5 }}>
-        {type === "buyers" ? (
+        {isPersonType ? (
           <Box>
             <Box
               sx={{
@@ -168,12 +205,51 @@ export default function ViewProductModal({ open, onClose, item, type }) {
                 mb: 2,
               }}
             >
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-                REQUIREMENT
-              </Typography>
-              <Typography variant="body2" sx={{ whiteSpace: "pre-line" }}>
-                {item.requirement || "No requirement available."}
-              </Typography>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
+                <Typography variant="caption" color="text.secondary">
+                  REQUIREMENT
+                </Typography>
+                {!isEditing && (
+                  <Button size="small" onClick={() => setIsEditing(true)}>
+                    Edit
+                  </Button>
+                )}
+              </Box>
+
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  value={editedRequirement}
+                  onChange={(e) => setEditedRequirement(e.target.value)}
+                  disabled={saving}
+                />
+              ) : (
+                <Typography variant="body2" sx={{ whiteSpace: "pre-line" }}>
+                  {item.requirement || "No requirement available."}
+                </Typography>
+              )}
+
+              {isEditing && (
+                <Box sx={{ display: "flex", gap: 1, mt: 1.5 }}>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={handleCancelEdit}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </Button>
+                </Box>
+              )}
             </Box>
 
             <DetailRow label="Email" value={item.email} />
@@ -395,6 +471,3 @@ function DetailRow({ label, value }) {
     </Box>
   );
 }
-
-
-

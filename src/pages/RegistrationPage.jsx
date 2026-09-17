@@ -129,93 +129,109 @@ export default function RegistrationPage() {
 
   return (
     <>
+      {/* Full-viewport background with the same industrial photo used on the homepage */}
       <Box
-        component="form"
-        onSubmit={handleNext}
         sx={{
+          minHeight: "100vh",
+          width: "100%",
           display: "flex",
-          flexDirection: "column",
-          gap: 2,
-          width: 800,
-          margin: "auto",
-          mt: 5,
-          p: 3,
-          border: "1px solid #ccc",
-          borderRadius: 2,
-          boxShadow: 2,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundImage: "url('/Whoweare.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: { xs: "scroll", md: "fixed" },
+          py: 4,
+          px: 2,
         }}
       >
-        <Stepper activeStep={0} alternativeLabel>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel sx={{ cursor: "pointer" }}>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-
-        <Typography variant="h5" align="center" gutterBottom sx={{ fontWeight: "bold" }}>
-          Register @ Krupalu Metal Inc!
-        </Typography>
-
-        <TextField
-          label="Email"
-          type="email"
-          value={email}
-          onChange={handleEmailChange}
-          error={Boolean(emailError)}
-          helperText={emailError}
-          required
-        />
-
-        <TextField
-          label="Password"
-          type={showPassword ? "text" : "password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end">
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
+        <Box
+          component="form"
+          onSubmit={handleNext}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            width: 800,
+            maxWidth: "100%",
+            p: 3,
+            bgcolor: "rgba(255,255,255,0.85)",
+            borderRadius: 2,
+            boxShadow: "0 12px 40px rgba(0,0,0,0.35)",
           }}
-        />
-
-        <TextField
-          label="Confirm Password"
-          type={showConfirmPassword ? "text" : "password"}
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowConfirmPassword((prev) => !prev)} edge="end">
-                  {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-
-        <TextField
-          select
-          label="Role"
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          required
         >
-          <MenuItem value="buyer">Buyer</MenuItem>
-          <MenuItem value="seller">Seller</MenuItem>
-          <MenuItem value="advertiser">Advertiser</MenuItem>
-        </TextField>
+          <Stepper activeStep={0} alternativeLabel>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel sx={{ cursor: "pointer" }}>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
 
-        <Button type="submit" variant="contained">
-          Next
-        </Button>
+          <Typography variant="h5" align="center" gutterBottom sx={{ fontWeight: "bold" }}>
+            Register @ Krupalu Metal Inc!
+          </Typography>
+
+          <TextField
+            label="Email"
+            type="email"
+            value={email}
+            onChange={handleEmailChange}
+            error={Boolean(emailError)}
+            helperText={emailError}
+            required
+          />
+
+          <TextField
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <TextField
+            label="Confirm Password"
+            type={showConfirmPassword ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowConfirmPassword((prev) => !prev)} edge="end">
+                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <TextField
+            select
+            label="Role"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            required
+          >
+            <MenuItem value="buyer">Buyer</MenuItem>
+            <MenuItem value="seller">Seller</MenuItem>
+            <MenuItem value="advertiser">Advertiser</MenuItem>
+          </TextField>
+
+          <Button type="submit" variant="contained">
+            Next
+          </Button>
+        </Box>
       </Box>
 
       {/* Error Modal */}

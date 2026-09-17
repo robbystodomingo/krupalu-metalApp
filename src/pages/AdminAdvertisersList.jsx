@@ -20,7 +20,8 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions
+    DialogActions,
+    Chip,
 } from "@mui/material";
 import axios from "axios";
 
@@ -39,9 +40,22 @@ export default function AdminAdvertisersList() {
             const res = await axios.get("/api/v1/admin/advertisersList", {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             });
-            setAdvertisers(res.data);
+
+            const data = Array.isArray(res.data) ? res.data : res.data?.items || [];
+            setAdvertisers(data.map(a => ({
+                id: a.id,
+                fullName: a.fullName || `${a.firstName || ""} ${a.lastName || ""}`.trim(),
+                email: a.email,
+                phoneNumber: a.phoneNumber,
+                country: a.country,
+                approvalStatus: a.approvalStatus ?? a.status ?? a.state ?? "",
+                createdAt: a.createdAt,
+                requirement: a.requirement || a.description || "",
+                _raw: a,
+            })
+        ));
         } catch (err) {
-            console.error("Error fetching buyers:", err);
+            console.error("Error fetching advertisers:", err);
         }
     };
 
@@ -53,20 +67,21 @@ export default function AdminAdvertisersList() {
     const filteredAdvertisers = advertisers.filter((advertiser) => {
         const term = searchTerm.toLowerCase();
         return (
-            advertiser.fullName?.toLowerCase().includes(term) ||
-            advertiser.country?.toLowerCase().includes(term) ||
-            advertiser.email?.toLowerCase().includes(term) ||
-            advertiser.phoneNumber?.toLowerCase().includes(term)
+            String(advertiser.fullName || "").toLowerCase().includes(term) ||
+            String(advertiser.country || "").toLowerCase().includes(term) ||
+            String(advertiser.email || "").toLowerCase().includes(term) ||
+            String(advertiser.phoneNumber || "").toLowerCase().includes(term) ||
+            String(advertiser.approvalStatus || "").toLowerCase().includes(term)
         );
     });
 
     const sortedAdvertisers = [...filteredAdvertisers].sort((a, b) => {
         if (sortBy === "name") {
-            return a.fullName?.localeCompare(b.fullName);
+            return String(a.fullName || "").localeCompare(String(b.fullName || ""));
         } else if (sortBy === "status") {
-            return a.approvalStatus?.toLowerCase().localeCompare(b.approvalStatus?.toLowerCase());
+            return String(a.approvalStatus || "").toLowerCase().localeCompare(String(b.approvalStatus || "").toLowerCase());
         } else if (sortBy === "date") {
-            return new Date(b.createdAt) - new Date(a.createdAt);
+            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
         }
         return 0;
     });
@@ -84,6 +99,13 @@ export default function AdminAdvertisersList() {
         setOpenRequirementModal(false);
         setSelectedRequirement("");
     };
+
+    function statusChipColor(status) {
+        const s = String(status || "").toLowerCase();
+        if (s.includes("approve") || s.includes("approved")) return "success";
+        if (s.includes("reject") || s.includes("rejected")) return "error";
+        return "warning";
+    }
 
     return (
         <Box sx={{ p: 3, mt: 4 }}>
@@ -128,6 +150,8 @@ export default function AdminAdvertisersList() {
                             <TableCell>Email</TableCell>
                             <TableCell>Phone</TableCell>
                             <TableCell>Country</TableCell>
+                            <TableCell>Status</TableCell>
+                            <TableCell>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -137,6 +161,28 @@ export default function AdminAdvertisersList() {
                                 <TableCell>{advertiser.email}</TableCell>
                                 <TableCell>{advertiser.phoneNumber}</TableCell>
                                 <TableCell>{advertiser.country}</TableCell>
+                                <TableCell>
+                                    {advertiser.approvalStatus ? (
+                                        <Chip
+                                            label={advertiser.approvalStatus}
+                                            color={statusChipColor(advertiser.approvalStatus)}
+                                            size="small"
+                                        />
+                                    ) : (
+                                        <Typography variant="body2" color="text.secondary">Pending</Typography>
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    <Button
+                                        variant="outlined"
+                                        color="info"
+                                        size="small"
+                                        sx={{ mr: 1 }}
+                                        onClick={() => handleOpenRequirement(advertiser.requirement)}
+                                    >
+                                        What we sell
+                                    </Button>
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

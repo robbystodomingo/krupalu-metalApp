@@ -42,16 +42,22 @@ export default function AdminDashboard() {
   const [buyers, setBuyers] = useState([]);
   const [ads, setAds] = useState([]);
   const [products, setProducts] = useState([]);
+  const [sellers, setSellers] = useState([]);
+  const [advertisers, setAdvertisers] = useState([]);
 
   // Search states
   const [buyerSearch, setBuyerSearch] = useState("");
   const [adSearch, setAdSearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
+  const [sellerSearch, setSellerSearch] = useState("");
+  const [advertiserSearch, setAdvertiserSearch] = useState("");
 
   // Pagination states
   const [buyerPage, setBuyerPage] = useState(0);
   const [adPage, setAdPage] = useState(0);
   const [productPage, setProductPage] = useState(0);
+  const [sellerPage, setSellerPage] = useState(0);
+  const [advertiserPage, setAdvertiserPage] = useState(0);
   const rowsPerPage = 5;
 
   // Details modal (view-only)
@@ -67,22 +73,28 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      const [buyersRes, adsRes, productsRes] = await Promise.all([
-        axios.get("/api/v1/admin/buyers/pending", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("/api/v1/admin/ads/pending", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("/api/v1/admin/products/pending", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
+      const endpoints = {
+        buyers: "buyers/pending",
+        sellers: "sellers/pending",
+        advertisers: "advertisers/pending",
+        ads: "ads/pending",
+        products: "products/pending",
+      };
 
-      setBuyers(buyersRes.data);
+      const entries = Object.entries(endpoints);
+      const responses = await Promise.all(
+        entries.map(([, path]) =>
+          axios.get(`/api/v1/admin/${path}`, { headers: { Authorization: `Bearer ${token}` } })
+        )
+      );
+      const data = Object.fromEntries(entries.map(([key], i) => [key, responses[i].data]));
+
+      setBuyers(data.buyers);
+      setSellers(data.sellers);
+      setAdvertisers(data.advertisers);
 
       setAds(
-        adsRes.data.map((a) => ({
+        data.ads.map((a) => ({
           id: a.id,
           advertiser: a.advertiserName || "Unknown",
           advertiserEmail: a.advertiserEmail || "",
@@ -95,7 +107,7 @@ export default function AdminDashboard() {
       );
 
       setProducts(
-        productsRes.data.map((p) => ({
+        data.products.map((p) => ({
           id: p.id,
           sellerName: p.sellerName || "Unknown",
           sellerEmail: p.sellerEmail || "",
@@ -132,6 +144,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSaveRequirement = async (type, id, requirement) => {
+    try {
+      await axios.patch(
+        `/api/v1/admin/${type}/${id}/requirement`,
+        { requirement },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setDetailsView((prev) =>
+        prev.data?.id === id ? { ...prev, data: { ...prev.data, requirement } } : prev
+      );
+      fetchData();
+    } catch (err) {
+      console.error("Update requirement error:", err.response ? err.response.data : err.message);
+    }
+  };
+
   const handleViewDetails = (type, row) => {
     setDetailsView({ type, data: row });
     setOpenDetailsModal(true);
@@ -142,7 +170,7 @@ export default function AdminDashboard() {
     setDetailsView({ type: null, data: null });
   };
 
-  const renderTable = (rows, columns, searchTerm, page, setPage, type) => {
+  const renderTable = (rows, columns, searchTerm, setSearchTerm, page, setPage, type) => {
     const filteredRows = rows.filter((row) =>
       Object.keys(columns).some((key) =>
         String(row[key] || "")
@@ -169,9 +197,7 @@ export default function AdminDashboard() {
           value={searchTerm}
           onChange={(e) => {
             setPage(0);
-            if (columns === buyerColumns) setBuyerSearch(e.target.value);
-            if (columns === adColumns) setAdSearch(e.target.value);
-            if (columns === productColumns) setProductSearch(e.target.value);
+            setSearchTerm(e.target.value);
           }}
         />
         <TableContainer component={Paper}>
@@ -299,6 +325,22 @@ export default function AdminDashboard() {
     approvalStatus: "Approval Status",
   };
 
+  const sellerColumns = {
+    fullName: "Full Name",
+    email: "Email Address",
+    phoneNumber: "Phone Number",
+    country: "Country",
+    approvalStatus: "Approval Status",
+  };
+
+  const advertiserColumns = {
+    fullName: "Full Name",
+    email: "Email Address",
+    phoneNumber: "Phone Number",
+    country: "Country",
+    approvalStatus: "Approval Status",
+  };
+
   const adColumns = {
     advertiser: "Advertisement Company",
     advertiserEmail: "Advertiser's Email",
@@ -328,20 +370,30 @@ export default function AdminDashboard() {
       </Typography>
       <Tabs value={tab} onChange={(e, newVal) => setTab(newVal)}>
         <Tab label="Buyers" />
+        <Tab label="Sellers" />
+        <Tab label="Advertisers" />
         <Tab label="Ads" />
         <Tab label="Products" />
       </Tabs>
 
       <TabPanel value={tab} index={0}>
-        {renderTable(buyers, buyerColumns, buyerSearch, buyerPage, setBuyerPage, "buyers")}
+        {renderTable(buyers, buyerColumns, buyerSearch, setBuyerSearch, buyerPage, setBuyerPage, "buyers")}
       </TabPanel>
 
       <TabPanel value={tab} index={1}>
-        {renderTable(ads, adColumns, adSearch, adPage, setAdPage, "ads")}
+        {renderTable(sellers, sellerColumns, sellerSearch, setSellerSearch, sellerPage, setSellerPage, "sellers")}
       </TabPanel>
 
       <TabPanel value={tab} index={2}>
-        {renderTable(products, productColumns, productSearch, productPage, setProductPage, "products")}
+        {renderTable(advertisers, advertiserColumns, advertiserSearch, setAdvertiserSearch, advertiserPage, setAdvertiserPage, "advertisers")}
+      </TabPanel>
+
+      <TabPanel value={tab} index={3}>
+        {renderTable(ads, adColumns, adSearch, setAdSearch, adPage, setAdPage, "ads")}
+      </TabPanel>
+
+      <TabPanel value={tab} index={4}>
+        {renderTable(products, productColumns, productSearch, setProductSearch, productPage, setProductPage, "products")}
       </TabPanel>
 
       <ViewProductModal
@@ -349,6 +401,7 @@ export default function AdminDashboard() {
         onClose={closeDetailsModal}
         item={detailsView.data}
         type={detailsView.type}
+        onSaveRequirement={handleSaveRequirement}
       />
 
       <Dialog open={openActionModal} onClose={() => setOpenActionModal(false)}>

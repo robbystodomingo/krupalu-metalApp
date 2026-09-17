@@ -3,24 +3,26 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
   Box,
   Pagination,
   Modal,
   Button,
   Divider,
   TextField,
+  IconButton,
 } from "@mui/material";
 import axios from "axios";
+import CloseIcon from "@mui/icons-material/Close";
+
 import { showConfirmation } from "../utils/ConfirmationModal";
 
-function AdvertiserCard({ name, country, onClick }) {
+function AdvertiserCard({ name, country, requirement, approvalStatus, onClick }) {
   return (
     <Card
       onClick={onClick}
       sx={{
-        width: "100%", // fills whatever column width the grid gives it
-        aspectRatio: "14 / 9", // keeps roughly your original 280:180 proportions, but scales fluidly
+        width: "100%",
+        aspectRatio: "14 / 9",
         border: "1px solid #eee",
         boxShadow: 2,
         transition: "transform 0.3s ease, box-shadow 0.3s ease",
@@ -49,10 +51,32 @@ function AdvertiserCard({ name, country, onClick }) {
         <Typography variant="h6" color="text.secondary">
           {country}
         </Typography>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            mt: 1,
+            fontStyle: "italic",
+            display: "-webkit-box",
+            overflow: "hidden",
+            WebkitBoxOrient: "vertical",
+            WebkitLineClamp: 2,
+          }}
+        >
+          {requirement || "No requirement available"}
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{ mt: 1, color: approvalStatus === "APPROVED" ? "green" : "orange" }}
+        >
+          Status: {approvalStatus}
+        </Typography>
       </CardContent>
     </Card>
   );
 }
+
+
 
 export default function AdvertisersList() {
   const [advertisers, setAdvertisers] = useState([]);
@@ -189,9 +213,13 @@ export default function AdvertisersList() {
             key={index}
             name={advertiser.fullName}
             country={advertiser.country}
+            requirement={advertiser.requirement}
+            approvalStatus={advertiser.approvalStatus}  
             onClick={() => handleCardClick(advertiser)}
           />
         ))}
+
+
       </Box>
 
       {/* Pagination */}
@@ -220,18 +248,38 @@ export default function AdvertisersList() {
             textAlign: "center",
           }}
         >
+          {/* X Close button */}
+          <IconButton
+            onClick={() => setOpenModal(false)}
+            sx={{ position: "absolute", right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+
           <Typography variant="h6" gutterBottom>
-            Request Admin to offer {selectedAdvertiser?.fullName} my product for
-            advertisement.
+            Request Admin to offer {selectedAdvertiser?.fullName} my product for advertisement.
           </Typography>
 
           <Divider sx={{ my: 3, borderColor: "grey.700", borderBottomWidth: 2 }} />
+
+          <Box sx={{ textAlign: "left", mb: 3 }}>
+            <Typography variant="subtitle1"><strong>Name:</strong> {selectedAdvertiser?.fullName}</Typography>
+            <Typography variant="subtitle1"><strong>Country:</strong> {selectedAdvertiser?.country}</Typography>
+            <Typography variant="body1" sx={{ mt: 1 }}>
+              <strong>Requirements:</strong> {selectedAdvertiser?.requirement || "No requirement provided"}
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              <strong>Approval Status:</strong> {selectedAdvertiser?.approvalStatus}
+            </Typography>
+          </Box>
+
 
           <Button variant="contained" color="primary" onClick={handleSendEmail}>
             Send Request to Admin
           </Button>
         </Box>
       </Modal>
+
     </Box>
   );
 }
