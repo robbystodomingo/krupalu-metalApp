@@ -2,6 +2,7 @@ package com.krupalu.MetalApp.services.impl;
 
 import com.krupalu.MetalApp.dto.UserUpdateRequest;
 import com.krupalu.MetalApp.entity.User;
+import com.krupalu.MetalApp.enums.ApprovalStatus;
 import com.krupalu.MetalApp.enums.Role;
 import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.UserService;
@@ -48,16 +49,33 @@ public class UserServiceImpl implements UserService {
     }
 
     public List<User> getSellers() {
-        return getUsersByRole(Role.SELLER);
+        return userRepository.findByRoleAndApprovalStatus(Role.SELLER, ApprovalStatus.APPROVED);
     }
 
     public List<User> getAdvertisers() {
+        return userRepository.findByRoleAndApprovalStatus(Role.ADVERTISER, ApprovalStatus.APPROVED);
+    }
+
+    @Override
+    public List<User> getSellersForAdmin() {
+        return getUsersByRole(Role.SELLER);
+    }
+
+    @Override
+    public List<User> getBuyersForAdmin() {
+        return getUsersByRole(Role.BUYER);
+    }
+
+    @Override
+    public List<User> getAdvertisersForAdmin() {
         return getUsersByRole(Role.ADVERTISER);
     }
 
     public List<User> getBuyers() {
-        return getUsersByRole(Role.BUYER);
+        return userRepository.findByRoleAndApprovalStatus(Role.BUYER, ApprovalStatus.APPROVED);
     }
+
+
 
     @Override
     public boolean userExists(String email) {

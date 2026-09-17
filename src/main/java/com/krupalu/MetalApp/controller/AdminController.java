@@ -2,6 +2,7 @@ package com.krupalu.MetalApp.controller;
 
 import com.krupalu.MetalApp.dto.AdvertisementPostRequest;
 import com.krupalu.MetalApp.dto.ProductPostRequest;
+import com.krupalu.MetalApp.dto.RequirementUpdateRequest;
 import com.krupalu.MetalApp.entity.AdvertisementPost;
 import com.krupalu.MetalApp.entity.ProductPost;
 import com.krupalu.MetalApp.entity.User;
@@ -36,6 +37,16 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getPendingBuyers());
     }
 
+    @GetMapping("/sellers/pending")
+    public ResponseEntity<List<User>> getPendingSellers() {
+        return ResponseEntity.ok(adminService.getPendingSellers());
+    }
+
+    @GetMapping("/advertisers/pending")
+    public ResponseEntity<List<User>> getPendingAdvertisers() {
+        return ResponseEntity.ok(adminService.getPendingAdvertisers());
+    }
+
     @PostMapping("/buyers/{id}/approve")
     public ResponseEntity<User> approveBuyer(@PathVariable String id) {
         return ResponseEntity.ok(adminService.approveBuyer(id));
@@ -45,6 +56,27 @@ public class AdminController {
     public ResponseEntity<User> rejectBuyer(@PathVariable String id) {
         return ResponseEntity.ok(adminService.rejectBuyer(id));
     }
+
+    @PostMapping("/sellers/{id}/approve")
+    public ResponseEntity<User> approveSeller(@PathVariable String id) {
+        return ResponseEntity.ok(adminService.approveSeller(id));
+    }
+
+    @PostMapping("/sellers/{id}/reject")
+    public ResponseEntity<User> rejectSeller(@PathVariable String id) {
+        return ResponseEntity.ok(adminService.rejectSeller(id));
+    }
+
+    @PostMapping("/advertisers/{id}/approve")
+    public ResponseEntity<User> approveAdvertiser(@PathVariable String id) {
+        return ResponseEntity.ok(adminService.approveAdvertiser(id));
+    }
+
+    @PostMapping("/advertisers/{id}/reject")
+    public ResponseEntity<User> rejectAdvertiser(@PathVariable String id) {
+        return ResponseEntity.ok(adminService.rejectAdvertiser(id));
+    }
+
 
     // --- Products ---
     @GetMapping("/products/pending")
@@ -80,16 +112,32 @@ public class AdminController {
 
     @GetMapping("/sellersList")
     public ResponseEntity<List<User>> getSellers() {
-        return ResponseEntity.ok(userService.getSellers());
+        return ResponseEntity.ok(userService.getSellersForAdmin());
     }
 
     @GetMapping("/advertisersList")
     public ResponseEntity<List<User>> getAdvertisers() {
-        return ResponseEntity.ok(userService.getAdvertisers());
+        return ResponseEntity.ok(userService.getAdvertisersForAdmin());
     }
 
     @GetMapping("/buyersList")
     public ResponseEntity<List<User>> getBuyers() {
-        return ResponseEntity.ok(userService.getBuyers());
+        return ResponseEntity.ok(userService.getBuyersForAdmin());
+    }
+
+
+    @PatchMapping("/buyers/{id}/requirement")
+    public ResponseEntity<User> updateBuyerRequirement(@PathVariable String id, @RequestBody RequirementUpdateRequest body) {
+        return ResponseEntity.ok(adminService.updateBuyerRequirement(id, body.requirement()));
+    }
+
+    @PatchMapping("/sellers/{id}/requirement")
+    public ResponseEntity<User> updateSellerRequirement(@PathVariable String id, @RequestBody RequirementUpdateRequest body) {
+        return ResponseEntity.ok(adminService.updateSellerRequirement(id, body.requirement()));
+    }
+
+    @PatchMapping("/advertisers/{id}/requirement")
+    public ResponseEntity<User> updateAdvertiserRequirement(@PathVariable String id, @RequestBody RequirementUpdateRequest body) {
+        return ResponseEntity.ok(adminService.updateAdvertiserRequirement(id, body.requirement()));
     }
 }

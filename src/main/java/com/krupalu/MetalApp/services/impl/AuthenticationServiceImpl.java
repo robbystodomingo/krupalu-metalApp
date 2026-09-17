@@ -60,7 +60,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setRequirement(registrationRequest.getRequirement());
             user.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
             user.setApprovalStatus(
-                    registrationRequest.getRole() == Role.BUYER
+                    // 👇 Pending for Buyer, Seller, Advertiser
+                    (registrationRequest.getRole() == Role.BUYER
+                            || registrationRequest.getRole() == Role.SELLER
+                            || registrationRequest.getRole() == Role.ADVERTISER)
                             ? ApprovalStatus.PENDING
                             : ApprovalStatus.APPROVED
             );
@@ -77,7 +80,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .requirement(registrationRequest.getRequirement())
                     .password(passwordEncoder.encode(registrationRequest.getPassword()))
                     .approvalStatus(
-                            registrationRequest.getRole() == Role.BUYER
+                            (registrationRequest.getRole() == Role.BUYER
+                                    || registrationRequest.getRole() == Role.SELLER
+                                    || registrationRequest.getRole() == Role.ADVERTISER)
                                     ? ApprovalStatus.PENDING
                                     : ApprovalStatus.APPROVED
                     )
@@ -87,17 +92,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         var savedUser = userRepository.save(user);
 
-        // Buyer logic unchanged
-        if (savedUser.getRole() == Role.BUYER && savedUser.getApprovalStatus() == ApprovalStatus.PENDING) {
+        // Block Buyer, Seller, Advertiser until approved
+        if ((savedUser.getRole() == Role.BUYER
+                || savedUser.getRole() == Role.SELLER
+                || savedUser.getRole() == Role.ADVERTISER)
+                && savedUser.getApprovalStatus() == ApprovalStatus.PENDING) {
+
             return JWTAuthenticationResponse.builder()
                     .token(null)
                     .refreshToken(null)
                     .email(savedUser.getEmail())
                     .fullName(savedUser.getFullName())
                     .role(savedUser.getRole().name())
+                    .message("Your account is pending admin approval.")
                     .build();
         }
 
+        // ✅ Only approved users get tokens
         var jwtToken = jwtService.generateToken(savedUser);
         var refreshToken = jwtService.generateRefreshToken(new HashMap<>(), savedUser);
         saveUserToken(savedUser, jwtToken);
@@ -112,61 +123,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
 
-    /*public JWTAuthenticationResponse registration(RegistrationRequest registrationRequest) {
-
-        if (userService.userExists(registrationRequest.getEmail())) {
-            throw new IllegalArgumentException("Email is already registered");
-        }
-
-        var user = User.builder()
-                .fullName(registrationRequest.getFullName())
-                .email(registrationRequest.getEmail())
-                .role(registrationRequest.getRole())
-                .country(registrationRequest.getCountry())
-                .phoneNumber(registrationRequest.getPhoneNumber())
-                .username(registrationRequest.getUsername())
-                .category(registrationRequest.getCategory())
-                .requirement(registrationRequest.getRequirement())
-                .password(passwordEncoder.encode(registrationRequest.getPassword()))
-                .approvalStatus(
-                        registrationRequest.getRole() == Role.BUYER
-                                ? ApprovalStatus.PENDING
-                                : ApprovalStatus.APPROVED
-                )
-                .build();
-
-        var savedUser = userRepository.save(user);
-
-        if (savedUser.getRole() == Role.BUYER && savedUser.getApprovalStatus() == ApprovalStatus.PENDING) {
-            return JWTAuthenticationResponse.builder()
-                    .token(null)
-                    .refreshToken(null)
-                    .email(savedUser.getEmail())
-                    .fullName(savedUser.getFullName())
-                    .role(savedUser.getRole().name())
-                    .build();
-        }
-
-        var jwtToken = jwtService.generateToken(savedUser);
-        var refreshToken = jwtService.generateRefreshToken(new HashMap<>(), savedUser);
-        saveUserToken(savedUser, jwtToken);
-
-        return JWTAuthenticationResponse.builder()
-                .token(jwtToken)
-                .refreshToken(refreshToken)
-                .email(savedUser.getEmail())
-                .fullName(savedUser.getFullName())
-                .role(savedUser.getRole().name())
-                .build();
-    }*/
-
-
     public JWTAuthenticationResponse signin(SignInRequest signInRequest){
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signInRequest.getEmail(),
                 signInRequest.getPassword()));
 
         var user = userRepository.findByEmail(signInRequest.getEmail()).orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
-        if (user.getRole().equals(Role.BUYER)) {
+        if (user.getRole() == Role.BUYER || user.getRole() == Role.SELLER || user.getRole() == Role.ADVERTISER) {
             if (user.getApprovalStatus().equals(ApprovalStatus.PENDING)) {
                 return JWTAuthenticationResponse.builder()
                         .email(user.getEmail())

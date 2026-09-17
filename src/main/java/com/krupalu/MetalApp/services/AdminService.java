@@ -13,7 +13,15 @@ public interface AdminService {
 
     public List<User> getPendingBuyers();
 
+    public List<User> getPendingSellers();
+
+    public List<User> getPendingAdvertisers();
+
     public User updateBuyerApproval(String userId, ApprovalStatus status);
+
+    public User updateSellerApproval(String userId, ApprovalStatus status);
+
+    public User updateAdvertiserApproval(String userId, ApprovalStatus status);
 
     public List<ProductPostRequest> getPendingProducts();
 
@@ -27,6 +35,14 @@ public interface AdminService {
 
     public User rejectBuyer(String userId);
 
+    public User approveSeller(String userId);
+
+    public User rejectSeller(String userId);
+
+    public User approveAdvertiser(String userId);
+
+    public User rejectAdvertiser(String userId);
+
     public ProductPost approveProduct(Long productId);
 
     public ProductPost rejectProduct(Long productId);
@@ -34,6 +50,12 @@ public interface AdminService {
     public AdvertisementPost approveAdvertisement(Long adId);
 
     public AdvertisementPost rejectAdvertisement(Long adId);
+
+    public User updateBuyerRequirement(String userId, String requirement);
+
+    public User updateSellerRequirement(String userId, String requirement);
+
+    public User updateAdvertiserRequirement(String userId, String requirement);
 
 
 }

@@ -8,12 +8,14 @@ import com.krupalu.MetalApp.repo.BuyerRequestRepository;
 import com.krupalu.MetalApp.repo.ProductPostRepository;
 import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.EmailService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class EmailServiceImpl implements EmailService {
     @Autowired
     private JavaMailSender mailSender;
@@ -33,7 +35,7 @@ public class EmailServiceImpl implements EmailService {
         message.setTo(to);
         message.setSubject(subject);
         message.setText(body);
-        mailSender.send(message);
+        safeSend(message);
     }
 
     public void emailForBuyerOffer(String fullName) {
@@ -48,7 +50,7 @@ public class EmailServiceImpl implements EmailService {
                 "\n" +
                 "Thank you for your time, and I look forward to hearing from you.\n" +
                 "\n");
-        mailSender.send(message);
+        safeSend(message);
     }
 
 
@@ -64,7 +66,7 @@ public class EmailServiceImpl implements EmailService {
                 "\n" +
                 "Thank you for your time, and I look forward to hearing from you.\n" +
                 "\n");
-        mailSender.send(message);
+        safeSend(message);
     }
 
     @Override
@@ -80,7 +82,7 @@ public class EmailServiceImpl implements EmailService {
                 "\n" +
                 "Thank you for your time, and I look forward to hearing from you.\n" +
                 "\n");
-        mailSender.send(message);
+        safeSend(message);
 
         User buyer = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Buyer not found with id: " + id));
@@ -103,7 +105,54 @@ public class EmailServiceImpl implements EmailService {
         message.setTo(email);
         message.setSubject("Your trial is ending soon");
         message.setText("Hi,\n\nYour trial will end in 7 days. After that, your subscription will continue automatically.\n\nIf you’d like to make changes, please visit your account settings.\n\nThanks,\nKrupalu Metal Inc.");
-        mailSender.send(message);
+        safeSend(message);
+    }
+
+    @Override
+    public void sendApprovalEmail(String to, String fullName, String role) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("sd.apps.co@gmail.com");
+        message.setTo(to);
+        message.setSubject("Your " + role + " account has been approved");
+        message.setText("Hi " + fullName + ",\n\n" +
+                "Good news — your " + role + " account has been approved. You can now log in and start using the platform.\n\n" +
+                "Thanks,\nKrupalu Metal Inc.");
+        safeSend(message);
+    }
+
+    @Override
+    public void sendRejectionEmail(String to, String fullName, String role) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("sd.apps.co@gmail.com");
+        message.setTo(to);
+        message.setSubject("Update on your " + role + " account application");
+        message.setText("Hi " + fullName + ",\n\n" +
+                "Thank you for your interest in joining Krupalu Metal Inc. as a " + role + ". " +
+                "After review, we're unable to approve your account at this time.\n\n" +
+                "If you have questions, feel free to reach out.\n\n" +
+                "Thanks,\nKrupalu Metal Inc.");
+        safeSend(message);
+    }
+
+    @Override
+    public void sendRequirementEditedEmail(String to, String fullName, String role) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("sd.apps.co@gmail.com");
+        message.setTo(to);
+        message.setSubject("Update on your " + role + " account");
+        message.setText("Hi " + fullName + ",\n\n" +
+                "After reviewing your account, we removed the contact details you provided, as adding contact information is not allowed on the site. " +
+                "Nevertheless, we will be approving your account.\n\n" +
+                "Thank you,\nKrupalu Metal Inc.");
+        safeSend(message);
+    }
+
+    private void safeSend(SimpleMailMessage message) {
+        try {
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send email to {}: {}", message.getTo(), e.getMessage(), e);
+        }
     }
 
 }

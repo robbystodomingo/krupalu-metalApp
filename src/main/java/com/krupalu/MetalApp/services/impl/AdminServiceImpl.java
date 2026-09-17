@@ -11,6 +11,7 @@ import com.krupalu.MetalApp.repo.AdvertisementPostRepository;
 import com.krupalu.MetalApp.repo.ProductPostRepository;
 import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.AdminService;
+import com.krupalu.MetalApp.services.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,10 +26,22 @@ public class AdminServiceImpl implements AdminService {
     private final ProductPostRepository productPostRepository;
     private final AdvertisementPostRepository advertisementPostRepository;
 
+    private final EmailService emailService;
+
 
     @Override
     public List<User> getPendingBuyers() {
         return userRepository.findByRoleAndApprovalStatus(Role.BUYER, ApprovalStatus.PENDING);
+    }
+
+    @Override
+    public List<User> getPendingSellers() {
+        return userRepository.findByRoleAndApprovalStatus(Role.SELLER, ApprovalStatus.PENDING);
+    }
+
+    @Override
+    public List<User> getPendingAdvertisers() {
+        return userRepository.findByRoleAndApprovalStatus(Role.ADVERTISER, ApprovalStatus.PENDING);
     }
 
     @Override
@@ -37,6 +50,22 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new RuntimeException("Buyer not found"));
         buyer.setApprovalStatus(status);
         return userRepository.save(buyer);
+    }
+
+    @Override
+    public User updateSellerApproval(String userId, ApprovalStatus status) {
+        User seller = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Seller not found"));
+        seller.setApprovalStatus(status);
+        return userRepository.save(seller);
+    }
+
+    @Override
+    public User updateAdvertiserApproval(String userId, ApprovalStatus status) {
+        User advertiser = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Advertiser not found"));
+        advertiser.setApprovalStatus(status);
+        return userRepository.save(advertiser);
     }
 
     @Override
@@ -53,16 +82,6 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new RuntimeException("Advertisement not found"));
         ad.setApprovalStatus(status);
         return advertisementPostRepository.save(ad);
-    }
-
-    @Override
-    public User approveBuyer(String userId) {
-        return updateBuyerApproval(userId, ApprovalStatus.APPROVED);
-    }
-
-    @Override
-    public User rejectBuyer(String userId) {
-        return updateBuyerApproval(userId, ApprovalStatus.REJECTED);
     }
 
     @Override
@@ -83,6 +102,36 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public AdvertisementPost rejectAdvertisement(Long adId) {
         return updateAdvertisementApproval(adId, ApprovalStatus.REJECTED);
+    }
+
+    @Override
+    public User updateBuyerRequirement(String userId, String requirement) {
+        User buyer = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Buyer not found"));
+        buyer.setRequirement(requirement);
+        User saved = userRepository.save(buyer);
+        emailService.sendRequirementEditedEmail(saved.getEmail(), saved.getFullName(), "Buyer");
+        return saved;
+    }
+
+    @Override
+    public User updateSellerRequirement(String userId, String requirement) {
+        User seller = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Seller not found"));
+        seller.setRequirement(requirement);
+        User saved = userRepository.save(seller);
+        emailService.sendRequirementEditedEmail(saved.getEmail(), saved.getFullName(), "Seller");
+        return saved;
+    }
+
+    @Override
+    public User updateAdvertiserRequirement(String userId, String requirement) {
+        User advertiser = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Advertiser not found"));
+        advertiser.setRequirement(requirement);
+        User saved = userRepository.save(advertiser);
+        emailService.sendRequirementEditedEmail(saved.getEmail(), saved.getFullName(), "Advertiser");
+        return saved;
     }
 
     @Override
@@ -127,5 +176,47 @@ public class AdminServiceImpl implements AdminService {
                             .build();
                 })
                 .toList();
+    }
+
+    @Override
+    public User approveBuyer(String userId) {
+        User buyer = updateBuyerApproval(userId, ApprovalStatus.APPROVED);
+        emailService.sendApprovalEmail(buyer.getEmail(), buyer.getFullName(), "Buyer");
+        return buyer;
+    }
+
+    @Override
+    public User rejectBuyer(String userId) {
+        User buyer = updateBuyerApproval(userId, ApprovalStatus.REJECTED);
+        emailService.sendRejectionEmail(buyer.getEmail(), buyer.getFullName(), "Buyer");
+        return buyer;
+    }
+
+    @Override
+    public User approveSeller(String userId) {
+        User seller = updateSellerApproval(userId, ApprovalStatus.APPROVED);
+        emailService.sendApprovalEmail(seller.getEmail(), seller.getFullName(), "Seller");
+        return seller;
+    }
+
+    @Override
+    public User rejectSeller(String userId) {
+        User seller = updateSellerApproval(userId, ApprovalStatus.REJECTED);
+        emailService.sendRejectionEmail(seller.getEmail(), seller.getFullName(), "Seller");
+        return seller;
+    }
+
+    @Override
+    public User approveAdvertiser(String userId) {
+        User advertiser = updateAdvertiserApproval(userId, ApprovalStatus.APPROVED);
+        emailService.sendApprovalEmail(advertiser.getEmail(), advertiser.getFullName(), "Advertiser");
+        return advertiser;
+    }
+
+    @Override
+    public User rejectAdvertiser(String userId) {
+        User advertiser = updateAdvertiserApproval(userId, ApprovalStatus.REJECTED);
+        emailService.sendRejectionEmail(advertiser.getEmail(), advertiser.getFullName(), "Advertiser");
+        return advertiser;
     }
 }

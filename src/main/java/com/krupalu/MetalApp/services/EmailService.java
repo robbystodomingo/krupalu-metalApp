@@ -11,4 +11,10 @@ public interface EmailService {
     public void emailForIntentToPurchase(String fullName, String id, Long productId);
 
     public void sendTrialReminder(String email);
+
+    public void sendApprovalEmail(String to, String fullName, String role);
+
+    public void sendRejectionEmail(String to, String fullName, String role);
+
+    public void sendRequirementEditedEmail(String to, String fullName, String role);
 }

@@ -16,6 +16,14 @@ public interface UserService {
 
     public List<User> getAdvertisers();
 
+
+    public List<User> getSellersForAdmin();
+
+    public List<User> getBuyersForAdmin();
+
+    public List<User> getAdvertisersForAdmin();
+
+
     public boolean userExists(String email);
 
     User updateUser(String userId, UserUpdateRequest request);
