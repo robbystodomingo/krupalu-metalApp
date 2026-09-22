@@ -41,7 +41,7 @@ export default function SellerRegistrationPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:8082/api/v1/auth/register", {
+      const response = await fetch("/api/v1/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -62,8 +62,8 @@ export default function SellerRegistrationPage() {
       console.log("Seller registered:", data);
 
       const confirmed = await showConfirmation({
-        title: "Registration Successful",
-        message: "Your Seller account has been created successfully.",
+        title: "Seller Registration is for approval",
+        message: "Your Seller account is under review by our Administrators and will get back to you shortly. Thank you!",
         confirmText: "Got it!",
         cancelText: "Back"
       });

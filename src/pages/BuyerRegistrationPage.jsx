@@ -45,7 +45,7 @@ export default function BuyerRegistrationPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:8082/api/v1/auth/register", {
+      const response = await fetch("/api/v1/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

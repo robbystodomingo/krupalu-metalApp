@@ -48,7 +48,7 @@ const PaymentForm = ({ email, onPaymentSaved }) => {
     try {
       // Step 1: ask backend for SetupIntent tied to this email
       const intentResponse = await fetch(
-        `http://localhost:8082/api/v1/subscription/registerPaymentMethod?email=${encodeURIComponent(
+        `/api/v1/subscription/registerPaymentMethod?email=${encodeURIComponent(
           email
         )}`,
         { method: "POST" }
@@ -186,7 +186,7 @@ export default function AdvertiserRegistrationPage() {
 
     try {
       const response = await fetch(
-        "http://localhost:8082/api/v1/auth/register",
+        "/api/v1/auth/register",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -210,8 +210,8 @@ export default function AdvertiserRegistrationPage() {
       console.log("Advertiser registered:", data);
 
       const confirmed = await showConfirmation({
-        title: "Registration Successful",
-        message: "Your Advertiser account has been created successfully.",
+        title: "Advertiser Registration is for approval",
+        message: "Your Advertiser account is under review by our Administrators and will get back to you shortly. Thank you!",
         confirmText: "Got it!",
         cancelText: "Back",
       });

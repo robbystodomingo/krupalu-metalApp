@@ -64,10 +64,19 @@ export default function AdminDashboard() {
   const [openDetailsModal, setOpenDetailsModal] = useState(false);
   const [detailsView, setDetailsView] = useState({ type: null, data: null });
 
-  // Action modal
+  // Confirmation dialog ("Are you sure?")
   const [openActionModal, setOpenActionModal] = useState(false);
   const [actionType, setActionType] = useState(null);
   const [actionTarget, setActionTarget] = useState({ type: "", id: "" });
+  const [processing, setProcessing] = useState(false);
+
+  // Result modal (shown after the request finishes)
+  const [resultModal, setResultModal] = useState({
+    open: false,
+    action: null,
+    type: "",
+    success: true,
+  });
 
   const token = localStorage.getItem("token");
 
@@ -131,17 +140,31 @@ export default function AdminDashboard() {
     fetchData();
   }, []);
 
+  // Runs when the admin clicks "Confirm" in the confirmation dialog
   const handleApproveReject = async () => {
+    if (processing) return;
     const { type, id } = actionTarget;
+    const action = actionType;
+
+    setProcessing(true);
     try {
-      await axios.post(`/api/v1/admin/${type}/${id}/${actionType}`, {}, {
+      await axios.post(`/api/v1/admin/${type}/${id}/${action}`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOpenActionModal(false);
+      setResultModal({ open: true, action, type, success: true });
       fetchData();
     } catch (err) {
-      console.error(`${actionType} error:`, err);
+      console.error(`${action} error:`, err.response ? err.response.data : err.message);
+      setOpenActionModal(false);
+      setResultModal({ open: true, action, type, success: false });
+    } finally {
+      setProcessing(false);
     }
+  };
+
+  const closeResultModal = () => {
+    setResultModal((prev) => ({ ...prev, open: false }));
   };
 
   const handleSaveRequirement = async (type, id, requirement) => {
@@ -234,7 +257,7 @@ export default function AdminDashboard() {
 
             <TableBody>
               {paginatedRows.map((row, idx) => (
-                <TableRow key={idx}>
+                <TableRow key={row.id ?? idx}>
                   {Object.keys(columns).map((key) => {
                     const value = row[key];
 
@@ -263,11 +286,7 @@ export default function AdminDashboard() {
                   <TableCell>
                     <Tooltip title={viewTooltip}>
                       <IconButton
-                        onClick={() =>
-                          isBuyerTable
-                            ? handleViewDetails("buyers", row)
-                            : handleViewDetails(type, row)
-                        }
+                        onClick={() => handleViewDetails(type, row)}
                         size="small"
                         sx={{ mr: 1 }}
                       >
@@ -359,6 +378,10 @@ export default function AdminDashboard() {
     approvalStatus: "Approval Status",
   };
 
+  // Helpers for the result modal text
+  const itemLabel = resultModal.type ? resultModal.type.slice(0, -1) : "item";
+  const pastTense = resultModal.action === "approve" ? "approved" : "rejected";
+
   return (
     <Box sx={{ p: 3, mt: 4 }}>
       <Typography variant="h4" gutterBottom>
@@ -404,7 +427,11 @@ export default function AdminDashboard() {
         onSaveRequirement={handleSaveRequirement}
       />
 
-      <Dialog open={openActionModal} onClose={() => setOpenActionModal(false)}>
+      {/* Confirmation dialog: "Are you sure?" */}
+      <Dialog
+        open={openActionModal}
+        onClose={() => !processing && setOpenActionModal(false)}
+      >
         <DialogTitle>{actionType === "approve" ? "Approve Item" : "Reject Item"}</DialogTitle>
         <DialogContent>
           <Typography>
@@ -412,13 +439,44 @@ export default function AdminDashboard() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenActionModal(false)}>Cancel</Button>
+          <Button onClick={() => setOpenActionModal(false)} disabled={processing}>
+            Cancel
+          </Button>
           <Button
             variant="contained"
             color={actionType === "approve" ? "success" : "error"}
             onClick={handleApproveReject}
+            disabled={processing}
           >
-            Confirm
+            {processing ? "Working..." : "Confirm"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Result modal: shown after the approve / reject request finishes */}
+      <Dialog open={resultModal.open} onClose={closeResultModal}>
+        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {resultModal.success && resultModal.action === "approve" ? (
+            <CheckCircleIcon color="success" />
+          ) : (
+            <CancelIcon color="error" />
+          )}
+          {resultModal.success
+            ? resultModal.action === "approve"
+              ? "Approved"
+              : "Rejected"
+            : "Request Failed"}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            {resultModal.success
+              ? `The ${itemLabel} was ${pastTense} successfully.`
+              : `Could not ${resultModal.action} the ${itemLabel}. Please try again.`}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={closeResultModal}>
+            OK
           </Button>
         </DialogActions>
       </Dialog>

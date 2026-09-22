@@ -21,27 +21,45 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
 
   if (!post) return null;
 
+  // Custom Next button
   const NextArrow = (props) => {
     const { onClick } = props;
     return (
-      <IconButton
+      <Button
         onClick={onClick}
-        sx={{ position: "absolute", right: -25, top: "40%", zIndex: 1 }}
+        variant="contained"
+        color="primary"
+        sx={{
+          position: "absolute",
+          right: -80,
+          top: "50%",
+          transform: "translateY(-50%)",
+          zIndex: 1,
+        }}
       >
-        <ArrowForwardIos />
-      </IconButton>
+        Next <ArrowForwardIos sx={{ ml: 1, fontSize: "1rem" }} />
+      </Button>
     );
   };
 
+  // Custom Previous button
   const PrevArrow = (props) => {
     const { onClick } = props;
     return (
-      <IconButton
+      <Button
         onClick={onClick}
-        sx={{ position: "absolute", left: -25, top: "40%", zIndex: 1 }}
+        variant="contained"
+        color="primary"
+        sx={{
+          position: "absolute",
+          left: -80,
+          top: "50%",
+          transform: "translateY(-50%)",
+          zIndex: 1,
+        }}
       >
-        <ArrowBackIos />
-      </IconButton>
+        <ArrowBackIos sx={{ mr: 1, fontSize: "1rem" }} /> Previous
+      </Button>
     );
   };
 
@@ -77,8 +95,8 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          width: 900, // was 600 — more room overall, and for the photo carousel especially
-          maxWidth: "90vw", // keeps it from overflowing on smaller screens
+          width: 900,
+          maxWidth: "90vw",
           maxHeight: "90vh",
           overflowY: "auto",
           bgcolor: "background.paper",
@@ -87,7 +105,7 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
           borderRadius: 2,
         }}
       >
-        {/* Close button, upper right */}
+        {/* Close button */}
         <IconButton
           onClick={handleClose}
           sx={{
@@ -100,7 +118,7 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
           <Close />
         </IconButton>
 
-        {/* Carousel for product photos */}
+        {/* Carousel with Previous/Next buttons */}
         {post.photoUrls && post.photoUrls.length > 0 && (
           <Slider {...settings}>
             {post.photoUrls.map((photo, index) => (
@@ -108,11 +126,11 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
                 key={index}
                 sx={{
                   textAlign: "center",
-                  height: 500, // fixed viewing area, was capped only by maxHeight before
+                  height: 500,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  bgcolor: "grey.100", // fills empty space around non-matching aspect ratios neutrally
+                  bgcolor: "grey.100",
                   borderRadius: 2,
                 }}
               >
@@ -122,7 +140,7 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
                   style={{
                     maxWidth: "100%",
                     maxHeight: "100%",
-                    objectFit: "contain", // was "cover" — this is what preserves true aspect ratio, no cropping
+                    objectFit: "contain",
                     borderRadius: 8,
                   }}
                 />
