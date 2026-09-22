@@ -8,6 +8,7 @@ import com.krupalu.MetalApp.repo.ProductPostRepository;
 import com.krupalu.MetalApp.services.ProductPostService;
 import com.krupalu.MetalApp.services.ProductPostViewService;
 import com.krupalu.MetalApp.util.PhotoUrlResolver;
+import com.krupalu.MetalApp.util.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,8 @@ public class ProductPostViewServiceImpl implements ProductPostViewService {
 
     private final PhotoUrlResolver photoUrlResolver;
 
+    private final S3Service s3Service;
+
     @Override
     public List<ProductPostRequest> getApprovedPostsBySeller(String sellerId) {
         List<ProductPost> posts = postRepository.findByUser_IdAndApprovalStatus(
@@ -30,9 +33,9 @@ public class ProductPostViewServiceImpl implements ProductPostViewService {
         return posts.stream()
                 .map(p -> {
                     User seller = p.getUser();
-                    List<String> rewrittenUrls = p.getPhotoUrls() != null
+                    List<String> presignedUrls = p.getPhotoUrls() != null
                             ? p.getPhotoUrls().stream()
-                            .map(photoUrlResolver::resolve)
+                            .map(s3Service::getPresignedUrl)
                             .toList()
                             : List.of();
                     return ProductPostRequest.builder()
@@ -40,7 +43,7 @@ public class ProductPostViewServiceImpl implements ProductPostViewService {
                             .productName(p.getProductName())
                             .description(p.getDescription())
                             .approvalStatus(p.getApprovalStatus())
-                            .photoUrls(rewrittenUrls)
+                            .photoUrls(presignedUrls)
                             .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
                             .sellerName(seller != null ? seller.getFullName() : null)
                             .sellerEmail(seller != null ? seller.getEmail() : null)

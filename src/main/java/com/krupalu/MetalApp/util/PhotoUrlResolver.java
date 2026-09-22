@@ -1,28 +1,19 @@
 package com.krupalu.MetalApp.util;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Component
 public class PhotoUrlResolver {
 
-    public String resolve(String storedPath) {
-        if (storedPath == null) return null;
+    @Value("${aws.s3.bucket}")
+    private String bucketName;
 
-        String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .build()
-                .toUriString();
+    @Value("${aws.region}")
+    private String region;
 
-        String relativePath = storedPath
-                .replaceAll("^[A-Za-z]:[/\\\\]", "/")
-                .replace("\\", "/");
-
-        if (!relativePath.startsWith("/")) {
-            relativePath = "/" + relativePath;
-        }
-
-        relativePath = relativePath.replaceAll("(?<!:)/{2,}", "/");
-
-        return baseUrl + relativePath;
+    public String resolve(String storedKey) {
+        if (storedKey == null) return null;
+        return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, storedKey);
     }
 }

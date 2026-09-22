@@ -9,6 +9,7 @@ import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.AdvertisementPostService;
 import com.krupalu.MetalApp.util.MyUserDetails;
 import com.krupalu.MetalApp.util.PhotoUrlResolver;
+import com.krupalu.MetalApp.util.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,10 +37,11 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
     private String uploadRoot;
 
     private static final String UPLOAD_ROOT = "D:/advertisements/";
-
     private final AdvertisementPostRepository advertisementPostRepository;
     private final UserRepository userRepository;
     private final PhotoUrlResolver photoUrlResolver;
+
+    private final S3Service s3Service;
 
     @Override
     public AdvertisementPost createAdvertisement(String userId, String advertisementName,
@@ -57,25 +59,11 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
                 .build();
         tempPost = advertisementPostRepository.save(tempPost);
 
-        // Store RELATIVE web paths only — never the raw disk path.
-        // PhotoUrlResolver applies the absolute URL only when reading data back out.
         List<String> photoPaths = new ArrayList<>();
         for (MultipartFile photo : photos) {
-            String uploadDir = uploadRoot + userId + "/" + tempPost.getId();
-            Files.createDirectories(Paths.get(uploadDir));
-
-            String fileName = tempPost.getId() + "_" + photo.getOriginalFilename();
-            String filePath = uploadDir + "/" + fileName;
-
-            Files.copy(photo.getInputStream(), Paths.get(filePath),
-                    StandardCopyOption.REPLACE_EXISTING);
-
-            String webPath = "/advertisements/" + userId + "/" + tempPost.getId() + "/" + fileName;
-
-            log.info("Saved file at: {}", filePath);
-            log.info("Web-servable path: {}", webPath);
-
-            photoPaths.add(webPath);
+            String key = "uploads/" + userId + "/" + tempPost.getId() + "/" + tempPost.getId() + "_" + photo.getOriginalFilename();
+            s3Service.upload(photo, key);
+            photoPaths.add(key);
         }
 
         tempPost.setPhotoUrls(photoPaths);
@@ -98,7 +86,7 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
                             .approvalStatus(post.getApprovalStatus())
                             .photoUrls(post.getPhotoUrls() != null
                                     ? post.getPhotoUrls().stream()
-                                    .map(photoUrlResolver::resolve)
+                                    .map(s3Service::getPresignedUrl)
                                     .toList()
                                     : List.of())
                             .advertiserName(advertiser != null ? advertiser.getFullName() : null)
@@ -109,6 +97,7 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
                 })
                 .toList();
     }
+
 
     @Override
     public AdvertisementPostRequest getAdvertisementById(Long id, String userId) {
@@ -121,16 +110,18 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
 
         User advertiser = post.getUser();
 
+        List<String> presignedUrls = post.getPhotoUrls() != null
+                ? post.getPhotoUrls().stream()
+                .map(s3Service::getPresignedUrl)
+                .toList()
+                : List.of();
+
         return AdvertisementPostRequest.builder()
                 .id(post.getId())
                 .advertisementName(post.getAdvertisementName())
                 .description(post.getDescription())
                 .approvalStatus(post.getApprovalStatus())
-                .photoUrls(post.getPhotoUrls() != null
-                        ? post.getPhotoUrls().stream()
-                        .map(photoUrlResolver::resolve)
-                        .toList()
-                        : List.of())
+                .photoUrls(presignedUrls)
                 .advertiserName(advertiser != null ? advertiser.getFullName() : null)
                 .advertiserEmail(advertiser != null ? advertiser.getEmail() : null)
                 .advertiserPhoneNumber(advertiser != null ? advertiser.getPhoneNumber() : null)
@@ -148,18 +139,7 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
         }
 
         if (post.getPhotoUrls() != null && !post.getPhotoUrls().isEmpty()) {
-            Path postFolder = Paths.get(uploadRoot + userId + "/" + advertisementId);
-            if (Files.exists(postFolder)) {
-                Files.walk(postFolder)
-                        .sorted((a, b) -> b.compareTo(a))
-                        .forEach(path -> {
-                            try {
-                                Files.delete(path);
-                            } catch (IOException e) {
-                                log.error("Failed to delete file: " + path, e);
-                            }
-                        });
-            }
+            post.getPhotoUrls().forEach(s3Service::delete);
         }
 
         advertisementPostRepository.delete(post);
@@ -186,16 +166,11 @@ public class AdvertisementPostServiceImpl implements AdvertisementPostService {
             String uploadDir = uploadRoot + userId + "/" + advertisementId;
             Files.createDirectories(Paths.get(uploadDir));
 
-            // Store RELATIVE web paths only — same as createAdvertisement.
             List<String> photoPaths = new ArrayList<>();
             for (MultipartFile photo : photos) {
-                String fileName = advertisementId + "_" + photo.getOriginalFilename();
-                String filePath = uploadDir + "/" + fileName;
-                Files.copy(photo.getInputStream(), Paths.get(filePath),
-                        StandardCopyOption.REPLACE_EXISTING);
-
-                String webPath = "/advertisements/" + userId + "/" + advertisementId + "/" + fileName;
-                photoPaths.add(webPath);
+                String key = "uploads/" + userId + "/" + post.getId() + "/" + post.getId() + "_" + photo.getOriginalFilename();
+                s3Service.upload(photo, key);
+                photoPaths.add(key);
             }
 
             post.setPhotoUrls(photoPaths);

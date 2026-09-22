@@ -12,8 +12,11 @@ import com.krupalu.MetalApp.repo.ProductPostRepository;
 import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.AdminService;
 import com.krupalu.MetalApp.services.EmailService;
+import com.krupalu.MetalApp.util.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.util.List;
 
@@ -25,8 +28,9 @@ public class AdminServiceImpl implements AdminService {
     private final UserRepository userRepository;
     private final ProductPostRepository productPostRepository;
     private final AdvertisementPostRepository advertisementPostRepository;
-
     private final EmailService emailService;
+
+    private final S3Service s3Service;
 
 
     @Override
@@ -168,7 +172,7 @@ public class AdminServiceImpl implements AdminService {
                             .productName(p.getProductName())
                             .description(p.getDescription())
                             .approvalStatus(p.getApprovalStatus())
-                            .photoUrls(p.getPhotoUrls())
+                            .photoUrls(p.getPhotoUrls().stream().map(s3Service::getPresignedUrl).toList())
                             .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
                             .sellerName(seller != null ? seller.getFullName() : null)
                             .sellerEmail(seller != null ? seller.getEmail() : null)
@@ -190,7 +194,7 @@ public class AdminServiceImpl implements AdminService {
                             .advertisementName(a.getAdvertisementName())
                             .description(a.getDescription())
                             .approvalStatus(a.getApprovalStatus())
-                            .photoUrls(a.getPhotoUrls())
+                            .photoUrls(a.getPhotoUrls().stream().map(s3Service::getPresignedUrl).toList())
                             .advertiserName(advertiser != null ? advertiser.getFullName() : null)
                             .advertiserEmail(advertiser != null ? advertiser.getEmail() : null)
                             .advertiserPhoneNumber(advertiser != null ? advertiser.getPhoneNumber() : null)

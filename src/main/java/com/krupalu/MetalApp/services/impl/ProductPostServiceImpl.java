@@ -11,6 +11,7 @@ import com.krupalu.MetalApp.repo.UserRepository;
 import com.krupalu.MetalApp.services.ProductPostService;
 import com.krupalu.MetalApp.util.MyUserDetails;
 import com.krupalu.MetalApp.util.PhotoUrlResolver;
+import com.krupalu.MetalApp.util.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,8 +43,9 @@ public class ProductPostServiceImpl implements ProductPostService {
     private final ProductPostRepository postRepository;
     private final ProductCategoryRepository categoryRepository;
     private final UserRepository userRepository;
-
     private final PhotoUrlResolver photoUrlResolver;
+    private final S3Service s3Service;
+
 
     @Override
     @Transactional
@@ -68,22 +70,11 @@ public class ProductPostServiceImpl implements ProductPostService {
 
         List<String> photoPaths = new ArrayList<>();
         for (MultipartFile photo : photos) {
-            String uploadDir = uploadRoot + userId + "/" + tempPost.getId();
-            Files.createDirectories(Paths.get(uploadDir));
-
-            String fileName = tempPost.getId() + "_" + photo.getOriginalFilename();
-            String filePath = uploadDir + "/" + fileName;
-
-            Files.copy(photo.getInputStream(), Paths.get(filePath),
-                    StandardCopyOption.REPLACE_EXISTING);
-
-            String webPath = "/uploads/" + userId + "/" + tempPost.getId() + "/" + fileName;
-
-            log.info("Saved file at: {}", filePath);
-            log.info("Web-servable path: {}", webPath);
-
-            photoPaths.add(webPath);
+            String key = "uploads/" + userId + "/" + tempPost.getId() + "/" + tempPost.getId() + "_" + photo.getOriginalFilename();
+            s3Service.upload(photo, key);
+            photoPaths.add(key);
         }
+
 
         tempPost.setPhotoUrls(photoPaths);
         return postRepository.save(tempPost);
@@ -108,18 +99,18 @@ public class ProductPostServiceImpl implements ProductPostService {
                 .map(p -> {
                     User seller = p.getUser();
 
-                    List<String> rewrittenUrls = p.getPhotoUrls() != null
+                    List<String> presignedUrls = p.getPhotoUrls() != null
                             ? p.getPhotoUrls().stream()
-                            .map(photoUrlResolver::resolve)
-                            .collect(Collectors.toCollection(ArrayList::new))
-                            : new ArrayList<>();
+                            .map(s3Service::getPresignedUrl)
+                            .toList()
+                            : List.of();
 
                     return ProductPostRequest.builder()
                             .id(p.getId())
                             .productName(p.getProductName())
                             .description(p.getDescription())
                             .approvalStatus(p.getApprovalStatus())
-                            .photoUrls(rewrittenUrls)
+                            .photoUrls(presignedUrls)
                             .categoryName(p.getCategory() != null ? p.getCategory().getCategoryName() : null)
                             .sellerName(seller != null ? seller.getFullName() : null)
                             .sellerEmail(seller != null ? seller.getEmail() : null)
@@ -129,6 +120,7 @@ public class ProductPostServiceImpl implements ProductPostService {
                 })
                 .toList();
     }
+
 
     @Override
     public ProductPostRequest getPostById(Long id, String userId) {
@@ -141,18 +133,18 @@ public class ProductPostServiceImpl implements ProductPostService {
 
         User seller = post.getUser();
 
-        List<String> rewrittenUrls = post.getPhotoUrls() != null
+        List<String> presignedUrls = post.getPhotoUrls() != null
                 ? post.getPhotoUrls().stream()
-                .map(photoUrlResolver::resolve)
-                .collect(Collectors.toCollection(ArrayList::new))
-                : new ArrayList<>();
+                .map(s3Service::getPresignedUrl)
+                .toList()
+                : List.of();
 
         return ProductPostRequest.builder()
                 .id(post.getId())
                 .productName(post.getProductName())
                 .description(post.getDescription())
                 .approvalStatus(post.getApprovalStatus())
-                .photoUrls(rewrittenUrls)
+                .photoUrls(presignedUrls)
                 .categoryName(post.getCategory() != null ? post.getCategory().getCategoryName() : null)
                 .sellerName(seller != null ? seller.getFullName() : null)
                 .sellerEmail(seller != null ? seller.getEmail() : null)
@@ -170,20 +162,8 @@ public class ProductPostServiceImpl implements ProductPostService {
             throw new RuntimeException("Unauthorized access to post");
         }
 
-
         if (post.getPhotoUrls() != null && !post.getPhotoUrls().isEmpty()) {
-            Path postFolder = Paths.get(uploadRoot + userId + "/" + postId);
-            if (Files.exists(postFolder)) {
-                Files.walk(postFolder)
-                        .sorted((a, b) -> b.compareTo(a))
-                        .forEach(path -> {
-                            try {
-                                Files.delete(path);
-                            } catch (IOException e) {
-                                log.error("Failed to delete file: " + path, e);
-                            }
-                        });
-            }
+            post.getPhotoUrls().forEach(s3Service::delete);
         }
 
         postRepository.delete(post);
@@ -219,13 +199,9 @@ public class ProductPostServiceImpl implements ProductPostService {
             // Store RELATIVE web paths only — same as createPost, no rewritePath() here.
             List<String> photoPaths = new ArrayList<>();
             for (MultipartFile photo : photos) {
-                String fileName = postId + "_" + photo.getOriginalFilename();
-                String filePath = uploadDir + "/" + fileName;
-                Files.copy(photo.getInputStream(), Paths.get(filePath),
-                        StandardCopyOption.REPLACE_EXISTING);
-
-                String webPath = "/uploads/" + userId + "/" + postId + "/" + fileName;
-                photoPaths.add(webPath);
+                String key = "uploads/" + userId + "/" + post.getId() + "/" + post.getId() + "_" + photo.getOriginalFilename();
+                s3Service.upload(photo, key);
+                photoPaths.add(key);
             }
 
             post.setPhotoUrls(photoPaths);
