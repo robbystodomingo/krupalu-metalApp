@@ -16,7 +16,7 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 
-const stripePromise = loadStripe("pk_test_51U654fRrP8vTwa4UwwB33rqh29DDLv984j8u9m1fB05t8v9AUGSB9ojec9t7HldqI0NjT9MDdhNS307XHmXCKHq000E5czXE3l");
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
 
 

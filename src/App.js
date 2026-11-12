@@ -14,6 +14,9 @@ import SellerRegistrationPage from './pages/SellerRegistrationPage'
 import BuyerRegistrationPage from './pages/BuyerRegistrationPage'
 import AdvertiserRegistrationPage from './pages/AdvertiserRegistrationPage'
 import PaymentRegistrationPage from './pages/PaymentRegistrationPage'
+import BuyersPage from './pages/BuyersPage'
+import SellersPage from './pages/SellersPage'
+import AdvertisersPage from './pages/AdvertisersPage'
 
 
 import ShowNavBar from './component/ShowNavBar';
@@ -80,6 +83,9 @@ function App() {
           <Route path="/joinasbuyer" element={<BuyerRegistrationPage />} />
           <Route path="/joinasadvertiser" element={<AdvertiserRegistrationPage />} />
           <Route path="/registerPaymentMethod" element={<PaymentRegistrationPage />} />
+          <Route path="/buyers" element={<BuyersPage />} />
+          <Route path="/sellers" element={<SellersPage />} />
+          <Route path="/advertisers" element={<AdvertisersPage />} />
 
           {/* Protected routes */}
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

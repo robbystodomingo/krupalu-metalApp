@@ -15,6 +15,14 @@ import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 // Add more paths here — the more images, the more "dynamic" the crossfade feels.
 const heroImages = ["/Banner.png", "/Foundry.png", "/Testing.png"];
 
+// Hero call-to-action buttons (title + subtitle), styled like the mockup.
+// Change the href values to wherever each button should lead.
+const heroButtons = [
+  { title: "I’m a Buyer", subtitle: "Find quality metals", href: "/buyers" },
+  { title: "I’m a Seller", subtitle: "List your metals", href: "/sellers" },
+  { title: "I’m an Advertiser", subtitle: "Promote your brand", href: "/advertisers" },
+];
+
 // Static beam layout — angle, position, width, and shine timing per beam.
 // Kept outside the component so it isn't recreated on every render.
 const beamConfigs = [
@@ -248,7 +256,9 @@ const HomePage = () => {
       <Box
         sx={{
           position: "relative",
-          height: { xs: "70vh", md: "88vh" },
+          // On mobile the hero grows with its content so the stacked buttons never get clipped
+          height: { xs: "auto", md: "88vh" },
+          minHeight: { xs: "70vh", md: 0 },
           overflow: "hidden",
           bgcolor: COLORS.graphite,
         }}
@@ -267,7 +277,6 @@ const HomePage = () => {
               transform: i === heroIndex ? "scale(1.06)" : "scale(1)",
             }}
           />
-
         ))}
 
         {/* Overlay for legibility */}
@@ -284,6 +293,7 @@ const HomePage = () => {
           sx={{
             position: "relative",
             height: "100%",
+            py: { xs: 6, md: 0 },
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
@@ -315,6 +325,70 @@ const HomePage = () => {
             Krupalu Metal Inc. connects buyers, sellers, and advertisers across
             ferrous and non-ferrous alloys — from raw coil to finished pipe.
           </Typography>
+
+          {/* Hero call-to-action buttons */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" }, // stacked on mobile, in a row on desktop
+              flexWrap: { md: "wrap" },
+              gap: { xs: 1.5, md: 3 },
+              width: "100%",
+              maxWidth: { xs: 420, md: "none" },
+            }}
+          >
+            {heroButtons.map((btn) => (
+              <Button
+                key={btn.title}
+                href={btn.href}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 0.75,
+                  px: { xs: 2.5, md: 4 },
+                  py: { xs: 1.5, md: 2 },
+                  width: { xs: "100%", md: "auto" }, // equal full-width buttons on mobile
+                  minWidth: { md: 200 },
+                  bgcolor: "#05060a",
+                  color: "#fff",
+                  textTransform: "none",
+                  borderRadius: 4,
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  boxShadow: "0 6px 20px rgba(0,0,0,0.45)",
+                  transition: "transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
+                  "&:hover": {
+                    bgcolor: "#0b0d14",
+                    borderColor: COLORS.accent,
+                    transform: "translateY(-3px)",
+                    boxShadow: "0 10px 26px rgba(0,0,0,0.6)",
+                  },
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: fontDisplay,
+                    fontWeight: 600,
+                    fontSize: { xs: "1.15rem", md: "1.6rem" },
+                    lineHeight: 1.1,
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  {btn.title}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: fontBody,
+                    fontWeight: 600,
+                    fontSize: { xs: "0.8rem", md: "0.95rem" },
+                    color: "rgba(255,255,255,0.9)",
+                  }}
+                >
+                  {btn.subtitle}
+                </Typography>
+              </Button>
+            ))}
+          </Box>
         </Container>
       </Box>
 

@@ -15,9 +15,6 @@ import {
 } from "@mui/material";
 import React from "react";
 
-import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-
 function statusChipColor(status) {
   const normalized = String(status || "").toLowerCase();
   if (normalized.includes("approve")) return "success";
@@ -332,37 +329,14 @@ function ProductDetails({ product, onThumbClick, activeIndex }) {
               }}
             />
 
-
-            {photoUrls.length > 1 && (
-              <IconButton
-                onClick={() => {
-                  const prev = (activeIndex - 1 + photoUrls.length) % photoUrls.length;
-                  onThumbClick(prev);
-                }}
-                aria-label="previous image"
-                size="large"
-                sx={{
-                  position: "absolute",
-                  left: 8,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  bgcolor: "rgba(255,255,255,0.85)",
-                  "&:hover": { bgcolor: "rgba(255,255,255,0.95)" },
-                  boxShadow: 1,
-                }}
-              >
-                <KeyboardArrowLeftIcon />
-              </IconButton>
-            )}
-
-
+            {/* Image counter (navigate with the left/right arrow keys) */}
             {photoUrls.length > 0 && (
               <Box
                 sx={{
                   position: "absolute",
                   left: "50%",
-                  top: "50%",
-                  transform: "translate(-50%, -50%)",
+                  bottom: 8,
+                  transform: "translateX(-50%)",
                   bgcolor: "rgba(0,0,0,0.6)",
                   color: "common.white",
                   px: 1.25,
@@ -384,28 +358,6 @@ function ProductDetails({ product, onThumbClick, activeIndex }) {
                   {photoUrls.length}
                 </Typography>
               </Box>
-            )}
-
-            {photoUrls.length > 1 && (
-              <IconButton
-                onClick={() => {
-                  const next = (activeIndex + 1) % photoUrls.length;
-                  onThumbClick(next);
-                }}
-                aria-label="next image"
-                size="large"
-                sx={{
-                  position: "absolute",
-                  right: 8,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  bgcolor: "rgba(255,255,255,0.85)",
-                  "&:hover": { bgcolor: "rgba(255,255,255,0.95)" },
-                  boxShadow: 1,
-                }}
-              >
-                <KeyboardArrowRightIcon />
-              </IconButton>
             )}
           </Box>
 

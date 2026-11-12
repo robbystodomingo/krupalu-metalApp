@@ -17,6 +17,7 @@ import {
   DialogActions
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 
 const steps = ["Account Setup", "Role Details"];
 
@@ -132,6 +133,7 @@ export default function RegistrationPage() {
       {/* Full-viewport background with the same industrial photo used on the homepage */}
       <Box
         sx={{
+          position: "relative", // lets the Home button sit in the top-left corner
           minHeight: "100vh",
           width: "100%",
           display: "flex",
@@ -145,6 +147,29 @@ export default function RegistrationPage() {
           px: 2,
         }}
       >
+        {/* Back to home — same as the login page. The dark pill keeps it readable over the photo. */}
+        <Button
+          href="/"
+          startIcon={<ArrowBackRoundedIcon />}
+          sx={{
+            position: "absolute",
+            top: { xs: 10, md: 20 },
+            left: { xs: 8, md: 24 },
+            zIndex: 2,
+            px: 2,
+            color: "#fff",
+            bgcolor: "transparent",
+            borderRadius: 50,
+            textTransform: "none",
+            fontWeight: 600,
+            textShadow: "0 1px 6px rgba(0,0,0,0.8)", // keeps the text readable over the photo
+            "& .MuiButton-startIcon": { filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.8))" },
+            "&:hover": { color: "#D4AF37", bgcolor: "transparent" },
+          }}
+        >
+          Home
+        </Button>
+
         <Box
           component="form"
           onSubmit={handleNext}
@@ -154,6 +179,7 @@ export default function RegistrationPage() {
             gap: 2,
             width: 800,
             maxWidth: "100%",
+            mt: { xs: 4, md: 0 }, // keeps the card clear of the Home button on small screens
             p: 3,
             bgcolor: "rgba(255,255,255,0.85)",
             borderRadius: 2,

@@ -12,6 +12,7 @@ const ProfileModal = ({ open, onClose }) => {
     const [email, setEmail] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [country, setCountry] = useState('');
+    const [requirement, setRequirement] = useState('');
     const [phoneError, setPhoneError] = useState('');
     const [isPhoneFocused, setIsPhoneFocused] = useState(false);
 
@@ -33,6 +34,7 @@ const ProfileModal = ({ open, onClose }) => {
                     setEmail(data.email || "");
                     setPhoneNumber(data.phoneNumber || "");
                     setCountry(data.country || "");
+                    setRequirement(data.requirement || "");
                 })
                 .catch(err => {
                     console.error("Failed to fetch user details:", err);
@@ -51,7 +53,7 @@ const ProfileModal = ({ open, onClose }) => {
         }
 
         try {
-            const updateData = { fullName, email, phoneNumber, country };
+            const updateData = { fullName, email, phoneNumber, country, requirement };
             const response = await axios.put(
                 `/api/v1/user/updateUser/${userId}`,
                 updateData,
@@ -62,6 +64,7 @@ const ProfileModal = ({ open, onClose }) => {
             localStorage.setItem('email', response.data.email || '');
             localStorage.setItem('phoneNumber', response.data.phoneNumber || '');
             localStorage.setItem('country', response.data.country || '');
+            localStorage.setItem('requirement', response.data.requirement || '');
 
             await showConfirmation({
                 title: 'Profile Updated',
@@ -89,7 +92,10 @@ const ProfileModal = ({ open, onClose }) => {
                 transform: 'translate(-50%, -50%)',
                 bgcolor: 'background.paper',
                 p: 4, borderRadius: 2, boxShadow: 24,
-                width: 400
+                width: 400,
+                maxWidth: '90vw',
+                maxHeight: '90vh',
+                overflowY: 'auto'
             }}>
                 {/* Close button */}
                 <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
@@ -158,8 +164,6 @@ const ProfileModal = ({ open, onClose }) => {
                         )}
                     </Box>
 
-
-
                     {/* Country Dropdown */}
                     <Autocomplete
                         options={countries}
@@ -170,6 +174,19 @@ const ProfileModal = ({ open, onClose }) => {
                             <TextField {...params} label="Country" required variant="outlined" fullWidth margin="normal" />
                         )}
                         fullWidth
+                    />
+
+                    {/* Requirement */}
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Requirement"
+                        placeholder="Describe what you are looking for"
+                        multiline
+                        minRows={3}
+                        maxRows={6}
+                        value={requirement}
+                        onChange={(e) => setRequirement(e.target.value)}
                     />
 
                     <Button type="submit" variant="contained" sx={{ mt: 2 }}>Save Changes</Button>

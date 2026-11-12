@@ -13,7 +13,11 @@ const ShowNavBar = ({ children }) => {
       "/register",       // registration page
       "/joinasseller",   // seller registration
       "/joinasbuyer",    // buyer registration
-      "/joinasadvertiser"// advertiser registration
+      "/joinasadvertiser",// advertiser registration
+      "/sellers",
+      "/buyers",
+      "/advertisers",
+
     ];
 
     if (hideNavbarRoutes.includes(location.pathname)) {

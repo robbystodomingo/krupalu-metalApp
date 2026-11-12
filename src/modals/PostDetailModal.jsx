@@ -1,11 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Modal, Box, Typography, Button, Divider, IconButton } from "@mui/material";
-import { ArrowBackIos, ArrowForwardIos, Close } from "@mui/icons-material";
+import { Close } from "@mui/icons-material";
+import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
+import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import Slider from "react-slick";
 import axios from "axios";
 
+// Shared look for the round arrow buttons that sit on top of the photo.
+const arrowButtonSx = {
+  position: "absolute",
+  top: "50%",
+  transform: "translateY(-50%)",
+  zIndex: 3,
+  width: { xs: 36, sm: 44 },
+  height: { xs: 36, sm: 44 },
+  bgcolor: "rgba(0,0,0,0.5)",
+  color: "#fff",
+  backdropFilter: "blur(4px)",
+  transition: "background-color 0.2s ease, transform 0.2s ease",
+  "&:hover": {
+    bgcolor: "rgba(0,0,0,0.75)",
+    transform: "translateY(-50%) scale(1.08)",
+  },
+};
+
 const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, onEdit }) => {
   const [post, setPost] = useState(null);
+  const sliderRef = useRef(null);
 
   useEffect(() => {
     if (!open || !productId) return;
@@ -19,49 +40,26 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
       .catch((err) => console.error("Error fetching product:", err));
   }, [open, productId]);
 
+  // Left/Right arrow keys switch photos while the modal is open
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const onKeyDown = (e) => {
+      const tag = e.target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft") {
+        sliderRef.current?.slickPrev();
+      } else if (e.key === "ArrowRight") {
+        sliderRef.current?.slickNext();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   if (!post) return null;
-
-  // Custom Next button
-  const NextArrow = (props) => {
-    const { onClick } = props;
-    return (
-      <Button
-        onClick={onClick}
-        variant="contained"
-        color="primary"
-        sx={{
-          position: "absolute",
-          right: -80,
-          top: "50%",
-          transform: "translateY(-50%)",
-          zIndex: 1,
-        }}
-      >
-        Next <ArrowForwardIos sx={{ ml: 1, fontSize: "1rem" }} />
-      </Button>
-    );
-  };
-
-  // Custom Previous button
-  const PrevArrow = (props) => {
-    const { onClick } = props;
-    return (
-      <Button
-        onClick={onClick}
-        variant="contained"
-        color="primary"
-        sx={{
-          position: "absolute",
-          left: -80,
-          top: "50%",
-          transform: "translateY(-50%)",
-          zIndex: 1,
-        }}
-      >
-        <ArrowBackIos sx={{ mr: 1, fontSize: "1rem" }} /> Previous
-      </Button>
-    );
-  };
 
   const settings = {
     dots: true,
@@ -69,10 +67,11 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    arrows: true,
-    nextArrow: <NextArrow />,
-    prevArrow: <PrevArrow />,
+    arrows: false, // built-in text buttons stay off; we draw our own round arrows below
   };
+
+  const hasPhotos = post.photoUrls && post.photoUrls.length > 0;
+  const hasMultiplePhotos = hasPhotos && post.photoUrls.length > 1;
 
   const handleDelete = () => {
     const token = localStorage.getItem("token");
@@ -112,41 +111,63 @@ const PostDetailModal = ({ open = false, handleClose, productId, onPostDeleted, 
             position: "absolute",
             top: 8,
             right: 8,
-            zIndex: 2,
+            zIndex: 4,
           }}
         >
           <Close />
         </IconButton>
 
-        {/* Carousel with Previous/Next buttons */}
-        {post.photoUrls && post.photoUrls.length > 0 && (
-          <Slider {...settings}>
-            {post.photoUrls.map((photo, index) => (
-              <Box
-                key={index}
-                sx={{
-                  textAlign: "center",
-                  height: 500,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  bgcolor: "grey.100",
-                  borderRadius: 2,
-                }}
-              >
-                <img
-                  src={photo}
-                  alt={`${post.productName} ${index + 1}`}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    objectFit: "contain",
-                    borderRadius: 8,
-                  }}
-                />
-              </Box>
-            ))}
-          </Slider>
+        {/* Carousel: arrow buttons, keyboard arrows, dots and swipe all work */}
+        {hasPhotos && (
+          <Box sx={{ position: "relative" }}>
+            <Slider ref={sliderRef} {...settings}>
+              {post.photoUrls.map((photo, index) => (
+                // Outer div takes react-slick's inline styles so the inner Box keeps its flex centering
+                <div key={index}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      height: { xs: 260, sm: 380, md: 500 }, // scales with screen size
+                      maxHeight: "60vh",
+                      overflow: "hidden",
+                      bgcolor: "grey.100",
+                      borderRadius: 2,
+                    }}
+                  >
+                    <img
+                      src={photo}
+                      alt={`${post.productName} ${index + 1}`}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover", // fills the box, ignores the photo's original ratio (edges get cropped)
+                        display: "block",
+                      }}
+                    />
+                  </Box>
+                </div>
+              ))}
+            </Slider>
+
+            {hasMultiplePhotos && (
+              <>
+                <IconButton
+                  aria-label="Previous photo"
+                  onClick={() => sliderRef.current?.slickPrev()}
+                  sx={{ ...arrowButtonSx, left: { xs: 8, sm: 14 } }}
+                >
+                  <ArrowBackIosNewRoundedIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  aria-label="Next photo"
+                  onClick={() => sliderRef.current?.slickNext()}
+                  sx={{ ...arrowButtonSx, right: { xs: 8, sm: 14 } }}
+                >
+                  <ArrowForwardIosRoundedIcon fontSize="small" />
+                </IconButton>
+              </>
+            )}
+          </Box>
         )}
 
         {/* Product details */}
