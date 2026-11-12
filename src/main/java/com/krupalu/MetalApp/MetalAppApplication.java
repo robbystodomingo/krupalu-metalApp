@@ -27,11 +27,11 @@ public class MetalAppApplication implements CommandLineRunner {
 
 		if (admins.isEmpty()) {
 			var user = User.builder()
-					.email("admin@gmail.com")
+					.email("admin@krupalu.com")
 					.fullName("admin")
 					.country("Philippines")
 					.role(Role.ADMIN)
-					.password(new BCryptPasswordEncoder().encode("admin"))
+					.password(new BCryptPasswordEncoder().encode("Krupalu@dmin2026!"))
 					.phoneNumber("0960123456789")
 					.username("admin")
 					.build();

@@ -9,4 +9,5 @@ public class UserUpdateRequest {
     private String phoneNumber;
     private String country;
     private String password;
+    private String requirement;
 }

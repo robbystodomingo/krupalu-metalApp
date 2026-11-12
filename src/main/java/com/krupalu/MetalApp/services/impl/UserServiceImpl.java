@@ -91,6 +91,7 @@ public class UserServiceImpl implements UserService {
         if (request.getEmail() != null) user.setEmail(request.getEmail());
         if (request.getPhoneNumber() != null) user.setPhoneNumber(request.getPhoneNumber());
         if (request.getCountry() != null) user.setCountry(request.getCountry());
+        if (request.getRequirement() != null) user.setRequirement(request.getRequirement());
 
         return userRepository.save(user);
     }
